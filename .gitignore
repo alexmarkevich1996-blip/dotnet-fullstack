@@ -1,0 +1,9 @@
+# JetBrains Rider
+.idea/
+
+# .NET build artifacts
+bin/
+obj/
+
+# macOS
+.DS_Store
