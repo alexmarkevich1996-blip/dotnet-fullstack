@@ -9,6 +9,8 @@ dotnet_diagnostic.CA2007.severity = none
 # CA1062: проверка null-аргументов — nullable reference types делают это за нас
 dotnet_diagnostic.CA1062.severity = none
 
+dotnet_diagnostic.CA1515.severity = none
+
 # CA1812: не инстанцированные классы — ложные срабатывания на DI-классах
 dotnet_diagnostic.CA1812.severity = none
 

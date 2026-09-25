@@ -24,6 +24,9 @@
     <!-- HTTP / OpenAPI -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.13.0" />
+    <!-- Транзитивная зависимость Microsoft.AspNetCore.OpenApi; закреплена на версии,
+         исправляющей CVE-2026-49451 (GHSA-v5pm-xwqc-g5wc) -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
 
     <!-- Health checks -->
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.7" />
