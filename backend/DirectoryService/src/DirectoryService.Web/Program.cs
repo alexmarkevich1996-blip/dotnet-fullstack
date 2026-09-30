@@ -4,10 +4,10 @@ using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-string connectionString = builder.Configuration.GetConnectionString("Default")
-    ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
+string connectionString = builder.Configuration.GetConnectionString("Directory")
+    ?? throw new InvalidOperationException("Connection string 'Directory' is not configured.");
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<DirectoryServiceDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
