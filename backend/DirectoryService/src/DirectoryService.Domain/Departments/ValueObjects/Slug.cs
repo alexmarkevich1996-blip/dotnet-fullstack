@@ -5,7 +5,7 @@ namespace DirectoryService.Domain.Departments.ValueObjects;
 
 public partial record Slug
 {
-    public const int MinLength = 2;
+    private const int MinLength = 2;
     public const int MaxLength = 100;
     public string Value { get; }
 

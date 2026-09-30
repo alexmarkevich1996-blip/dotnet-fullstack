@@ -2,7 +2,7 @@ namespace DirectoryService.Domain.Common.ValueObjects;
 
 public sealed record Name
 {
-    public const int MinLength = 2;
+    private const int MinLength = 2;
     public const int MaxLength = 64;
     public string Value { get; }
     private Name(string value) => Value = value;

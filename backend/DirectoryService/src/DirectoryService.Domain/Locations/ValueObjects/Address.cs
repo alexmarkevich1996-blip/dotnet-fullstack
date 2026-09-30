@@ -3,7 +3,7 @@ namespace DirectoryService.Domain.Locations.ValueObjects;
 public sealed record Address
 {
     private const int MinLength = 5;
-    private const int MaxLength = 300;
+    public const int MaxLength = 300;
 
     public string Value { get; }
 
