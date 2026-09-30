@@ -3,7 +3,7 @@ namespace DirectoryService.Domain.Departments.ValueObjects;
 public sealed record Path
 {
     private const int MinLength = 2;
-    private const int MaxLength = 1000;
+    public const int MaxLength = 1000;
     private const char Separator = '/';
 
     public string Value { get; }
@@ -35,5 +35,11 @@ public sealed record Path
     {
         if (value.Length < MinLength || value.Length > MaxLength)
             throw new ArgumentException($"Path should be between {MinLength} and {MaxLength} characters long", nameof(value));
+    }
+
+    public static Path FromValue(string value)
+    {
+        Validate(value);
+        return new Path(value);
     }
 }
