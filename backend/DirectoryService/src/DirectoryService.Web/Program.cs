@@ -14,6 +14,7 @@ builder.Services.AddDbContext<DirectoryServiceDbContext>(options =>
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 WebApplication app = builder.Build();
 
