@@ -1,4 +1,5 @@
 using DirectoryService.Infrastructure.Postgres;
+using DirectoryService.Web;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -11,10 +12,7 @@ builder.Services.AddDbContext<DirectoryServiceDbContext>(options =>
     options.UseNpgsql(connectionString)
         .UseSnakeCaseNamingConvention());
 
-builder.Services.AddOpenApi();
-builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
+builder.Services.AddProgramDependencies();
 
 WebApplication app = builder.Build();
 
