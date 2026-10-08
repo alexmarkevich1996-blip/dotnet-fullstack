@@ -1,19 +1,46 @@
 using DirectoryService.Core.Locations;
+using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Locations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure.Postgres.Repositories;
 
 public class EfCoreLocationsRepository : ILocationsRepository
 {
-    public Task<Guid> AddAsync(Location location, CancellationToken cancellationToken)
+    private readonly DirectoryServiceDbContext _context;
+    private readonly ILogger<EfCoreLocationsRepository> _logger;
+
+    public EfCoreLocationsRepository(DirectoryServiceDbContext context, ILogger<EfCoreLocationsRepository> logger)
     {
-        throw new NotSupportedException("Not implemented yet");
+        _context = context;
+        _logger = logger;
+    }
+
+    public async Task<Guid> AddAsync(Location location, CancellationToken cancellationToken)
+    {
+        _context.Locations.Add(location);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+            return location.Id;
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogLocationSaveFailed(ex, location.Id);
+            throw new InvalidOperationException($"Failed to save location {location.Id}.", ex);
+        }
     }
     
-    public Task<Location?> GetByNameAsync(string name, CancellationToken cancellationToken)
+    public async Task<Location?> GetByNameAsync(string name, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet");
+        Name nameValue = Name.Create(name);
 
+        return await _context.Locations
+            .FirstOrDefaultAsync(
+                l => l.Name == nameValue,
+                cancellationToken);
     }
 
     public Task<Guid> SaveAsync(Location location, CancellationToken cancellationToken)
