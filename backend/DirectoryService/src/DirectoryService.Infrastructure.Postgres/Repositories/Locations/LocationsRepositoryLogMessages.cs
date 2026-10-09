@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace DirectoryService.Infrastructure.Postgres.Repositories;
+namespace DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 
 internal static partial class LocationsRepositoryLogMessages
 {

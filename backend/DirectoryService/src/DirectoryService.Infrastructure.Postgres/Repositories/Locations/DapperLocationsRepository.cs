@@ -6,7 +6,7 @@ using DirectoryService.Domain.Locations.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace DirectoryService.Infrastructure.Postgres.Repositories;
+namespace DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 
 public class DapperLocationsRepository : ILocationsRepository
 {
@@ -24,6 +24,7 @@ public class DapperLocationsRepository : ILocationsRepository
                                          INSERT INTO locations (id, name, address, created_at, updated_at) 
                                          VALUES (@Id, @Name, @Address, @CreatedAt, @UpdatedAt)   
                                          """;
+        
         var locationsInsertParams = new
         {
             location.Id,
@@ -96,5 +97,19 @@ public class DapperLocationsRepository : ILocationsRepository
         throw new NotSupportedException("Not implemented yet");
     }
 
-    
+    public async Task<IReadOnlyCollection<Guid>> GetExistingIdsAsync(
+        IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        const string sql = "SELECT id FROM locations WHERE id = ANY(@Ids)";
+
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        var existingIds = await connection.QueryAsync<Guid>(
+            new CommandDefinition(
+                sql,
+                new { Ids = ids.ToArray() },
+                cancellationToken: cancellationToken));
+
+        return existingIds.ToList();
+    }
 }
