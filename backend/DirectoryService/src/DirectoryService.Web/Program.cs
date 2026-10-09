@@ -1,18 +1,9 @@
-using DirectoryService.Infrastructure.Postgres;
 using DirectoryService.Web;
-using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("Directory")
-    ?? throw new InvalidOperationException("Connection string 'Directory' is not configured.");
-
-builder.Services.AddDbContext<DirectoryServiceDbContext>(options =>
-    options.UseNpgsql(connectionString)
-        .UseSnakeCaseNamingConvention());
-
-builder.Services.AddProgramDependencies();
+builder.Services.AddProgramDependencies(builder.Configuration);
 
 WebApplication app = builder.Build();
 

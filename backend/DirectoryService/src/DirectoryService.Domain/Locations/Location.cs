@@ -12,14 +12,17 @@ public class Location
     public DateTime UpdatedAt { get; private set; }
 
     private Location(Name name, Address address)
+        : this(Guid.CreateVersion7(),  name, address, DateTime.UtcNow, DateTime.UtcNow)
     {
-        Id = Guid.CreateVersion7();
+    }
+    private Location(Guid id, Name name, Address address, DateTime createdAt, DateTime updatedAt)
+    {
+        Id = id;
         Name = name;
         Address = address;
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        CreatedAt = createdAt;
+        UpdatedAt = updatedAt;
     }
-
     public static Location Create(Name name, Address address)
     {
         ArgumentNullException.ThrowIfNull(name);
@@ -27,4 +30,18 @@ public class Location
         
         return new Location(name, address);
     }
+
+    internal static Location Rehydrate(Guid id, Name name, Address address, DateTime createdAt, DateTime updatedAt)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(id, Guid.Empty);
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(address);
+        if (updatedAt < createdAt)
+            throw new ArgumentException(
+                "UpdatedAt cannot be earlier than CreatedAt.",
+                nameof(updatedAt));
+        
+        return new (id, name, address, createdAt, updatedAt);
+    }
+        
 }
