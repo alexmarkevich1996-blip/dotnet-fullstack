@@ -18,4 +18,7 @@ public class LocationNotFoundException : Exception
 
     public static LocationNotFoundException ForIds(IReadOnlyCollection<Guid> ids) =>
         new($"Locations not found: {string.Join(", ", ids)}");
+    public static LocationNotFoundException ForId(Guid id) =>
+        new($"Location not found: {string.Join(", ", id)}");
+    
 }

@@ -10,5 +10,6 @@ public interface IDepartmentsRepository
         CancellationToken cancellationToken);
     Task<Department?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Department?> GetByNameAsync(string name, CancellationToken cancellationToken);
+    Task UpdateAsync(Department department, CancellationToken cancellationToken);
 
 }

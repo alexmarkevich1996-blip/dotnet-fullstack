@@ -19,6 +19,14 @@ public class DepartmentsController : ControllerBase
         var departmentId = await _departmentsService.Create(request, cancellationToken);
         return Ok(departmentId);
     }
+    
+    [HttpPatch("{departmentId:guid}")]
+    public async Task<IActionResult> Update([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentDto request,
+        CancellationToken cancellationToken)
+    {
+        await _departmentsService.Update(departmentId, request, cancellationToken);
+        return NoContent();
+    }
 
     [HttpGet]
     public IActionResult Get([FromQuery] GetDepartmentDto request, CancellationToken cancellationToken)
@@ -30,13 +38,6 @@ public class DepartmentsController : ControllerBase
     public IActionResult GetById([FromRoute] Guid departmentId, CancellationToken cancellationToken)
     {
         return NotFound();
-    }
-
-    [HttpPut("{departmentId:guid}")]
-    public IActionResult Update([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentDto request,
-        CancellationToken cancellationToken)
-    {
-        return NoContent();
     }
 
     [HttpDelete("{departmentId:guid}")]

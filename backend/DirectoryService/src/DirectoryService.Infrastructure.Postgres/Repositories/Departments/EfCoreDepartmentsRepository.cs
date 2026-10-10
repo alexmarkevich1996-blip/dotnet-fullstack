@@ -55,4 +55,17 @@ public class EfCoreDepartmentsRepository : IDepartmentsRepository
             .FirstOrDefaultAsync(
                 d => d.Name == nameValue, cancellationToken);
     }
+
+    public async Task UpdateAsync(Department department, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogDepartmentsSaveFailed(ex, department.Id);
+            throw new InvalidOperationException($"Failed to save department {department.Id}", ex);
+        }
+    }
 }

@@ -77,6 +77,19 @@ public partial class DepartmentsService : IDepartmentsService
 
         return department.Id;
     }
+
+    public async Task Update(Guid id, UpdateDepartmentDto departmentDto, CancellationToken cancellationToken)
+    {
+        var existingDepartment =  await _departmentsRepository.GetByIdAsync(id, cancellationToken);
+        if (existingDepartment == null)
+            throw DepartmentNotFoundException.ForId(id);
+        
+        var newDepartmentName = Name.Create(departmentDto.Name);
+        existingDepartment.UpdateName(newDepartmentName);
+        
+        await _departmentsRepository.UpdateAsync(existingDepartment, cancellationToken);
+    }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Department created with id {DepartmentId}")]
     private partial void LogDepartmentCreated(Guid departmentId);
 }
