@@ -6,7 +6,7 @@ using DirectoryService.Domain.Locations.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace DirectoryService.Infrastructure.Postgres.Repositories;
+namespace DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 
 public class DapperLocationsRepository : ILocationsRepository
 {
@@ -24,6 +24,7 @@ public class DapperLocationsRepository : ILocationsRepository
                                          INSERT INTO locations (id, name, address, created_at, updated_at) 
                                          VALUES (@Id, @Name, @Address, @CreatedAt, @UpdatedAt)   
                                          """;
+        
         var locationsInsertParams = new
         {
             location.Id,
@@ -46,6 +47,11 @@ public class DapperLocationsRepository : ILocationsRepository
             _logger.LogLocationSaveFailed(ex, location.Id);
             throw new InvalidOperationException($"Failed to save location {location.Id}.", ex);
         }
+    }
+
+    public Task UpdateAsync(Location location, CancellationToken cancellationToken)
+    {
+        throw new NotSupportedException("not implemented yet");
     }
 
     public async Task<Location?> GetByNameAsync(string name, CancellationToken cancellationToken)
@@ -91,10 +97,51 @@ public class DapperLocationsRepository : ILocationsRepository
         throw new NotSupportedException("Not implemented yet");
     }
 
-    public Task<Location?> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
+    public async Task<Location?> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet");
+        const string sql = """
+                           SELECT
+                                id AS Id,
+                                name as Name,
+                                address as Address,
+                                created_at AS CreatedAt,
+                                updated_at AS UpdatedAt
+                           FROM locations
+                           WHERE id = @Id;
+                           """;
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        LocationRow? row = await connection.QuerySingleOrDefaultAsync<LocationRow>(
+            new CommandDefinition(
+                sql,
+                new { Id = locationId },
+                cancellationToken: cancellationToken));
+
+        if (row == null)
+            return null;
+
+        return Location.Rehydrate(
+            row.Id,
+            Name.Create(row.Name),
+            Address.Create(row.Address),
+            row.CreatedAt,
+            row.UpdatedAt
+        );
     }
 
-    
+    public async Task<IReadOnlyCollection<Guid>> GetExistingIdsAsync(
+        IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        const string sql = "SELECT id FROM locations WHERE id = ANY(@Ids)";
+
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        var existingIds = await connection.QueryAsync<Guid>(
+            new CommandDefinition(
+                sql,
+                new { Ids = ids.ToArray() },
+                cancellationToken: cancellationToken));
+
+        return existingIds.ToList();
+    }
 }

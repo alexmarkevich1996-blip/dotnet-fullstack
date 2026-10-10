@@ -1,5 +1,8 @@
+using DirectoryService.Core.Departments;
 using DirectoryService.Core.Locations;
 using DirectoryService.Infrastructure.Postgres.Repositories;
+using DirectoryService.Infrastructure.Postgres.Repositories.Departments;
+using DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +30,8 @@ public static class InfrastructureServiceCollectionExtensions
             services.AddScoped<ILocationsRepository, DapperLocationsRepository>();
         else
             services.AddScoped<ILocationsRepository, EfCoreLocationsRepository>();
+
+        services.AddScoped<IDepartmentsRepository, EfCoreDepartmentsRepository>();
 
         return services;
     }

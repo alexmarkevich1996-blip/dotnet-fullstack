@@ -1,4 +1,5 @@
 using DirectoryService.Contracts.Departments;
+using DirectoryService.Core.Departments;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DirectoryService.Web.Controllers;
@@ -7,11 +8,24 @@ namespace DirectoryService.Web.Controllers;
 [Route("[controller]")]
 public class DepartmentsController : ControllerBase
 {
-    [HttpPost]
-    public IActionResult Create([FromBody] CreateDepartmentDto request, CancellationToken cancellationToken)
+    private readonly IDepartmentsService _departmentsService;
+    public DepartmentsController(IDepartmentsService departmentsService)
     {
-        Guid newDepartmentId = Guid.NewGuid();
-        return CreatedAtAction(nameof(GetById), new { departmentId = newDepartmentId }, newDepartmentId);   
+        _departmentsService = departmentsService;
+    }
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateDepartmentDto request, CancellationToken cancellationToken)
+    {
+        var departmentId = await _departmentsService.Create(request, cancellationToken);
+        return Ok(departmentId);
+    }
+    
+    [HttpPatch("{departmentId:guid}")]
+    public async Task<IActionResult> Update([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentDto request,
+        CancellationToken cancellationToken)
+    {
+        await _departmentsService.Update(departmentId, request, cancellationToken);
+        return NoContent();
     }
 
     [HttpGet]
@@ -24,13 +38,6 @@ public class DepartmentsController : ControllerBase
     public IActionResult GetById([FromRoute] Guid departmentId, CancellationToken cancellationToken)
     {
         return NotFound();
-    }
-
-    [HttpPut("{departmentId:guid}")]
-    public IActionResult Update([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentDto request,
-        CancellationToken cancellationToken)
-    {
-        return NoContent();
     }
 
     [HttpDelete("{departmentId:guid}")]

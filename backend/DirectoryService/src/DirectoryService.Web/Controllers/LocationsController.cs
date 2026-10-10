@@ -20,6 +20,14 @@ public class LocationsController : ControllerBase
         var locationId = await _locationsService.Create(request, cancellationToken);
         return Ok(locationId);
     }
+    
+    [HttpPatch("{locationId:guid}")]
+    public async Task<IActionResult> Update([FromRoute] Guid locationId, [FromBody] UpdateLocationDto request,
+        CancellationToken cancellationToken)
+    {
+        await _locationsService.Update(locationId, request, cancellationToken);
+        return NoContent();
+    }
 
     [HttpGet]
     public IActionResult Get([FromQuery] GetLocationDto request, CancellationToken cancellationToken)
@@ -31,13 +39,6 @@ public class LocationsController : ControllerBase
     public IActionResult GetById([FromRoute] Guid locationId, CancellationToken cancellationToken)
     {
         return NotFound();
-    }
-
-    [HttpPut("{locationId:guid}")]
-    public IActionResult Update([FromRoute] Guid locationId, [FromBody] UpdateLocationDto request,
-        CancellationToken cancellationToken)
-    {
-        return NoContent();
     }
 
     [HttpDelete("{locationId:guid}")]

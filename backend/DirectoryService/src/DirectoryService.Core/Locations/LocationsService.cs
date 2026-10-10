@@ -49,6 +49,20 @@ public partial class LocationsService : ILocationsService
         return location.Id;
     }
 
+    public async Task Update(Guid locationId, UpdateLocationDto request, CancellationToken cancellationToken)
+    {
+        var existingLocation = await _locationsRepository.GetByIdAsync(locationId, cancellationToken);
+        if (existingLocation == null)
+            throw LocationNotFoundException.ForId(locationId);
+        
+        var updatedName = Name.Create(request.Name);
+        var updatedAddress = Address.Create(
+                $"{request.City}, {request.Street}, {request.House}, {request.Apartment}");
+        existingLocation.UpdateDetails(updatedName, updatedAddress);
+
+        await _locationsRepository.UpdateAsync(existingLocation, cancellationToken);
+    }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Location created with id {LocationId}")]
     private partial void LogLocationCreated(Guid locationId);
 }
