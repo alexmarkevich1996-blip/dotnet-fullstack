@@ -19,6 +19,22 @@ public class DepartmentsController : ControllerBase
         var departmentId = await _departmentsService.Create(request, cancellationToken);
         return Ok(departmentId);
     }
+
+    [HttpPost("{departmentId:guid}/locations/{locationId:guid}")]
+    public async Task<IActionResult> AddLocation([FromRoute] Guid departmentId, [FromRoute] Guid locationId,
+        CancellationToken cancellationToken)
+    {
+        await _departmentsService.AddLocation(departmentId, locationId, cancellationToken);
+        return NoContent();
+    }
+    
+    [HttpDelete("{departmentId:guid}/locations/{locationId:guid}")]
+    public async Task<IActionResult> RemoveLocation([FromRoute] Guid departmentId, [FromRoute] Guid locationId,
+        CancellationToken cancellationToken)
+    {
+        await _departmentsService.RemoveLocation(departmentId, locationId, cancellationToken);
+        return NoContent();
+    }
     
     [HttpPatch("{departmentId:guid}")]
     public async Task<IActionResult> Update([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentDto request,

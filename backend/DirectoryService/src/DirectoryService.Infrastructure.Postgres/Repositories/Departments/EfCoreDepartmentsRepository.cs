@@ -68,4 +68,46 @@ public class EfCoreDepartmentsRepository : IDepartmentsRepository
             throw new InvalidOperationException($"Failed to save department {department.Id}", ex);
         }
     }
+
+    public async Task AddLocationAsync(DepartmentLocation departmentLocation, CancellationToken cancellationToken)
+    {
+        _context.DepartmentLocations.Add(departmentLocation);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch(DbUpdateException ex)
+        {
+            _logger.LogDepartmentsSaveFailed(ex, departmentLocation.DepartmentId);
+            throw new InvalidOperationException($"Failed to link location {departmentLocation.LocationId} to department {departmentLocation.DepartmentId}.", ex);
+        }
+    }
+
+     public async Task RemoveLocationAsync(Guid departmentId, Guid locationId, CancellationToken cancellationToken)                                                                     
+  {
+      var departmentLocation = await _context.DepartmentLocations
+          .FirstOrDefaultAsync(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId, cancellationToken);                                                             
+                                                                                                                                                                                     
+      if (departmentLocation is null)
+          return;
+      _context.DepartmentLocations.Remove(departmentLocation);
+      
+      try
+      {
+          await _context.SaveChangesAsync(cancellationToken);
+      }
+      catch (DbUpdateException ex)
+      {
+          _logger.LogDepartmentsSaveFailed(ex, departmentId);
+          throw new InvalidOperationException($"Failed to unlink location {locationId} from department {departmentId}.", ex);                                                        
+      }
+  }
+    public Task<bool> LocationLinkExistsAsync(Guid departmentId, Guid locationId, CancellationToken cancellationToken)
+    {
+        var existingDepartmentLocation = _context.DepartmentLocations
+            .FirstOrDefault(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId);
+
+        return Task.FromResult(existingDepartmentLocation is not null);
+    }
 }
