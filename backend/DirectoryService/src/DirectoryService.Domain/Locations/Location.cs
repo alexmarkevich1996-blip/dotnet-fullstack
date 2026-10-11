@@ -31,6 +31,15 @@ public class Location
         return new Location(name, address);
     }
 
+    public void UpdateDetails(Name name, Address address)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(address);
+        Name = name;
+        Address =  address;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     internal static Location Rehydrate(Guid id, Name name, Address address, DateTime createdAt, DateTime updatedAt)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id, Guid.Empty);

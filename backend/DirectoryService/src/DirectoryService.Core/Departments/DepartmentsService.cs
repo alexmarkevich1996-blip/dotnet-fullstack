@@ -77,6 +77,63 @@ public partial class DepartmentsService : IDepartmentsService
 
         return department.Id;
     }
+
+    public async Task Update(Guid id, UpdateDepartmentDto departmentDto, CancellationToken cancellationToken)
+    {
+        var existingDepartment =  await _departmentsRepository.GetByIdAsync(id, cancellationToken);
+        if (existingDepartment == null)
+            throw DepartmentNotFoundException.ForId(id);
+        
+        var newDepartmentName = Name.Create(departmentDto.Name);
+        existingDepartment.UpdateName(newDepartmentName);
+        
+        await _departmentsRepository.UpdateAsync(existingDepartment, cancellationToken);
+    }
+
+    public async Task AddLocation(Guid departmentId, Guid locationId, CancellationToken cancellationToken)
+    {
+        var existingLocation = await _locationsRepository.GetByIdAsync(locationId, cancellationToken);
+        if (existingLocation == null)
+        {
+            throw LocationNotFoundException.ForId(locationId);
+        }
+        var existingDepartment = await _departmentsRepository.GetByIdAsync(departmentId, cancellationToken);
+        if (existingDepartment == null)
+        {
+            throw DepartmentNotFoundException.ForId(departmentId);
+        }
+        
+        var locationLinkExists = await _departmentsRepository.LocationLinkExistsAsync(existingDepartment.Id, existingLocation.Id, cancellationToken);
+        
+        if(locationLinkExists)
+            throw DepartmentLocationAlreadyExistsException.ForIds(existingDepartment.Id, existingLocation.Id);
+        
+        var newDepartmentLocation = DepartmentLocation.Create(existingDepartment.Id, existingLocation.Id, isPrimary: false);                                                           
+                                                                                                                                                                                     
+        await _departmentsRepository.AddLocationAsync(newDepartmentLocation, cancellationToken);
+    }
+    
+    public async Task RemoveLocation(Guid departmentId, Guid locationId, CancellationToken cancellationToken)
+    {
+        var existingLocation = await _locationsRepository.GetByIdAsync(locationId, cancellationToken);
+        if (existingLocation == null)
+        {
+            throw LocationNotFoundException.ForId(locationId);
+        }
+        var existingDepartment = await _departmentsRepository.GetByIdAsync(departmentId, cancellationToken);
+        if (existingDepartment == null)
+        {
+            throw DepartmentNotFoundException.ForId(departmentId);
+        }
+        
+        var locationLinkExists = await _departmentsRepository.LocationLinkExistsAsync(existingDepartment.Id, existingLocation.Id, cancellationToken);
+
+        if (!locationLinkExists)
+            throw DepartmentLocationNotFoundException.ForIds(existingDepartment.Id, existingLocation.Id);
+                                                                                                                                                                                     
+        await _departmentsRepository.RemoveLocationAsync(departmentId, locationId, cancellationToken);
+    }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Department created with id {DepartmentId}")]
     private partial void LogDepartmentCreated(Guid departmentId);
 }

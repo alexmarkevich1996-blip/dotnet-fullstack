@@ -32,7 +32,20 @@ public class EfCoreLocationsRepository : ILocationsRepository
             throw new InvalidOperationException($"Failed to save location {location.Id}.", ex);
         }
     }
-    
+
+    public async Task UpdateAsync(Location location, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogLocationSaveFailed(ex, location.Id);
+            throw new InvalidOperationException($"Failed to save location {location.Id}.", ex);
+        }
+    }
+
     public async Task<Location?> GetByNameAsync(string name, CancellationToken cancellationToken)
     {
         Name nameValue = Name.Create(name);
@@ -54,9 +67,10 @@ public class EfCoreLocationsRepository : ILocationsRepository
         throw new NotSupportedException("Not implemented yet");
     }
 
-    public Task<Location?> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
+    public async Task<Location?> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet");
+        return await _context.Locations
+            .FirstOrDefaultAsync(l => l.Id == locationId, cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<Guid>> GetExistingIdsAsync(

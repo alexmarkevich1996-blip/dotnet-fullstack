@@ -46,4 +46,11 @@ public class Department
 
         return new Department(parentId, name, slug, path);
     }
+
+    public void UpdateName(Name name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        Name = name;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

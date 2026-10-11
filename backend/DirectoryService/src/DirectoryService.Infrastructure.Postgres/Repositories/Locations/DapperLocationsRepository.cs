@@ -49,6 +49,11 @@ public class DapperLocationsRepository : ILocationsRepository
         }
     }
 
+    public Task UpdateAsync(Location location, CancellationToken cancellationToken)
+    {
+        throw new NotSupportedException("not implemented yet");
+    }
+
     public async Task<Location?> GetByNameAsync(string name, CancellationToken cancellationToken)
     {
         const string sql = """
@@ -92,9 +97,36 @@ public class DapperLocationsRepository : ILocationsRepository
         throw new NotSupportedException("Not implemented yet");
     }
 
-    public Task<Location?> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
+    public async Task<Location?> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
     {
-        throw new NotSupportedException("Not implemented yet");
+        const string sql = """
+                           SELECT
+                                id AS Id,
+                                name as Name,
+                                address as Address,
+                                created_at AS CreatedAt,
+                                updated_at AS UpdatedAt
+                           FROM locations
+                           WHERE id = @Id;
+                           """;
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        LocationRow? row = await connection.QuerySingleOrDefaultAsync<LocationRow>(
+            new CommandDefinition(
+                sql,
+                new { Id = locationId },
+                cancellationToken: cancellationToken));
+
+        if (row == null)
+            return null;
+
+        return Location.Rehydrate(
+            row.Id,
+            Name.Create(row.Name),
+            Address.Create(row.Address),
+            row.CreatedAt,
+            row.UpdatedAt
+        );
     }
 
     public async Task<IReadOnlyCollection<Guid>> GetExistingIdsAsync(

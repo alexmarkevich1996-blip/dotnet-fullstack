@@ -1,5 +1,6 @@
 # JetBrains Rider
 .idea/
+*.DotSettings.user
 
 # .NET build artifacts
 bin/
