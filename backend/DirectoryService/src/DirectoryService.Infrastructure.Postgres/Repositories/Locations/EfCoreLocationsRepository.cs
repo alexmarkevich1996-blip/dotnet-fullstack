@@ -4,7 +4,7 @@ using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace DirectoryService.Infrastructure.Postgres.Repositories;
+namespace DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 
 public class EfCoreLocationsRepository : ILocationsRepository
 {
@@ -59,5 +59,12 @@ public class EfCoreLocationsRepository : ILocationsRepository
         throw new NotSupportedException("Not implemented yet");
     }
 
-    
+    public async Task<IReadOnlyCollection<Guid>> GetExistingIdsAsync(
+        IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        return await _context.Locations
+            .Where(l => ids.Contains(l.Id))
+            .Select(l => l.Id)
+            .ToListAsync(cancellationToken);
+    }
 }
