@@ -2,48 +2,29 @@ using DirectoryService.Core.Locations;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 
 public class EfCoreLocationsRepository : ILocationsRepository
 {
     private readonly DirectoryServiceDbContext _context;
-    private readonly ILogger<EfCoreLocationsRepository> _logger;
 
-    public EfCoreLocationsRepository(DirectoryServiceDbContext context, ILogger<EfCoreLocationsRepository> logger)
+    public EfCoreLocationsRepository(DirectoryServiceDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<Guid> AddAsync(Location location, CancellationToken cancellationToken)
     {
         _context.Locations.Add(location);
 
-        try
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-            return location.Id;
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogLocationSaveFailed(ex, location.Id);
-            throw new InvalidOperationException($"Failed to save location {location.Id}.", ex);
-        }
+        await _context.SaveChangesAsync(cancellationToken);
+        return location.Id;
     }
 
     public async Task UpdateAsync(Location location, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogLocationSaveFailed(ex, location.Id);
-            throw new InvalidOperationException($"Failed to save location {location.Id}.", ex);
-        }
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<Location?> GetByNameAsync(string name, CancellationToken cancellationToken)

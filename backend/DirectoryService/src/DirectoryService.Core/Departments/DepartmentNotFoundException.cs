@@ -1,21 +1,12 @@
+using DirectoryService.Domain.Common.Errors;
+
 namespace DirectoryService.Core.Departments;
 
-public class DepartmentNotFoundException : Exception
+public class DepartmentNotFoundException : DomainException
 {
-    public DepartmentNotFoundException()
+    private DepartmentNotFoundException(Error error) : base(error)
     {
     }
-
-    public DepartmentNotFoundException(string message)
-        : base(message)
-    {
-    }
-
-    public DepartmentNotFoundException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
-
     public static DepartmentNotFoundException ForId(Guid id) =>
-        new($"Department with id '{id}' was not found");
+        new(Error.NotFound("department.not_found", $"Department with id '{id}' was not found"));
 }

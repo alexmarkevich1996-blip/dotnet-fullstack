@@ -1,12 +1,18 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace DirectoryService.Domain.Common.Errors;
 
+[SuppressMessage(
+    "Naming",
+    "CA1716:Identifiers should not match keywords",
+    Justification = "'Error' is the intended domain term here (see task spec); this service is not consumed from VB.NET.")]
 public sealed record Error
 {
     public string Code { get;}
     public string Message { get;}
     public ErrorType Type { get;}
 
-    public Error(string code, string message, ErrorType type)
+    private Error(string code, string message, ErrorType type)
     {
         Code = code;
         Message = message;

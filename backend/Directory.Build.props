@@ -17,6 +17,11 @@
 
         <!-- Исключаем bin/obj из сборки -->
         <DefaultItemExcludes>$(DefaultItemExcludes);**/bin/**;**/obj/**</DefaultItemExcludes>
+
+        <!-- CA1032/RCS1194 требуют стандартные конструкторы исключений (), (string), (string, Exception).
+             Доменные исключения (DomainException и наследники) намеренно их не имеют — создание только
+             через статические фабрики, чтобы каждое исключение обязательно несло Error. -->
+        <NoWarn>$(NoWarn);CA1032;RCS1194</NoWarn>
     </PropertyGroup>
 
     <!-- Анализаторы кода — применяются ко всем проектам автоматически -->

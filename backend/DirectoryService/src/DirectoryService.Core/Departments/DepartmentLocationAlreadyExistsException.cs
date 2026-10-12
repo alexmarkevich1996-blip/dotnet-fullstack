@@ -1,21 +1,15 @@
+using DirectoryService.Domain.Common.Errors;
+
 namespace DirectoryService.Core.Departments;
 
-public class DepartmentLocationAlreadyExistsException : Exception
+public class DepartmentLocationAlreadyExistsException : DomainException
 {
-    public DepartmentLocationAlreadyExistsException()
-    {
-    }
-
-    public DepartmentLocationAlreadyExistsException(string message)
-        : base(message)
-    {
-    }
-
-    public DepartmentLocationAlreadyExistsException(string message, Exception innerException)
-        : base(message, innerException)
+    private DepartmentLocationAlreadyExistsException(Error error) : base(error)
     {
     }
 
     public static DepartmentLocationAlreadyExistsException ForIds(Guid departmentId, Guid locationId) =>
-        new($"Location '{locationId}' is already linked to department '{departmentId}'");
+        new(Error.Conflict(
+            "department_location.already_exists",
+            $"Location '{locationId}' is already linked to department '{departmentId}'"));
 }

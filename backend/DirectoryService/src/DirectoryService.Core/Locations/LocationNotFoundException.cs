@@ -1,24 +1,16 @@
+using DirectoryService.Domain.Common.Errors;
+
 namespace DirectoryService.Core.Locations;
 
-public class LocationNotFoundException : Exception
+public class LocationNotFoundException : DomainException
 {
-    public LocationNotFoundException()
+    private LocationNotFoundException(Error error) : base(error)
     {
     }
 
-    public LocationNotFoundException(string message)
-        : base(message)
-    {
-    }
-
-    public LocationNotFoundException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+    public static LocationNotFoundException ForId(Guid id) =>
+        new(Error.NotFound("location.not_found", $"Location '{id}' was not found"));
 
     public static LocationNotFoundException ForIds(IReadOnlyCollection<Guid> ids) =>
-        new($"Locations not found: {string.Join(", ", ids)}");
-    public static LocationNotFoundException ForId(Guid id) =>
-        new($"Location not found: {string.Join(", ", id)}");
-    
+        new(Error.NotFound("location.not_found", $"Locations not found: {string.Join(", ", ids)}"));
 }
