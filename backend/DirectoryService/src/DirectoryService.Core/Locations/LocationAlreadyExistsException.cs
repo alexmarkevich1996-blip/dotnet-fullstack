@@ -1,21 +1,13 @@
+using DirectoryService.Domain.Common.Errors;
+
 namespace DirectoryService.Core.Locations;
 
-public class LocationAlreadyExistsException : Exception
+public class LocationAlreadyExistsException : DomainException
 {
-    public LocationAlreadyExistsException()
-    {
-    }
-
-    public LocationAlreadyExistsException(string message)
-        : base(message)
-    {
-    }
-
-    public LocationAlreadyExistsException(string message, Exception innerException)
-        : base(message, innerException)
+    private LocationAlreadyExistsException(Error error) : base(error)
     {
     }
 
     public static LocationAlreadyExistsException ForName(string name) =>
-        new($"Location with name '{name}' already exists");
+        new(Error.Conflict("location.name.duplicate", $"Location with name '{name}' already exists"));
 }

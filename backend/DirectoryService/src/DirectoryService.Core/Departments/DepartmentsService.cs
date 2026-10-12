@@ -1,5 +1,6 @@
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Core.Locations;
+using DirectoryService.Core.Validation;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Departments;
 using DirectoryService.Domain.Departments.ValueObjects;
@@ -33,7 +34,7 @@ public partial class DepartmentsService : IDepartmentsService
 
         if (!validationResult.IsValid)
         {
-            throw new ValidationException(validationResult.Errors);
+            throw RequestValidationException.FromValidationErrors(validationResult.Errors);
         }
 
         var existingDepartment = await _departmentsRepository.GetByNameAsync(departmentDto.Name, cancellationToken);

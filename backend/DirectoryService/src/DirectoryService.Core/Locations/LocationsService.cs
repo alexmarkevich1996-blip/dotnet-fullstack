@@ -1,4 +1,5 @@
 using DirectoryService.Contracts.Locations;
+using DirectoryService.Core.Validation;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Locations.ValueObjects;
@@ -29,7 +30,7 @@ public partial class LocationsService : ILocationsService
 
         if (!validationResult.IsValid)
         {
-            throw new ValidationException(validationResult.Errors);
+            throw RequestValidationException.FromValidationErrors(validationResult.Errors);
         }
         
         var existingLocation = await _locationsRepository.GetByNameAsync(locationDto.Name, cancellationToken);

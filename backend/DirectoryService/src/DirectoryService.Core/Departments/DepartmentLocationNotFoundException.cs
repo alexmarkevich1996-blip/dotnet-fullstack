@@ -1,21 +1,15 @@
+using DirectoryService.Domain.Common.Errors;
+
 namespace DirectoryService.Core.Departments;
 
-public class DepartmentLocationNotFoundException : Exception
+public class DepartmentLocationNotFoundException : DomainException
 {
-    public DepartmentLocationNotFoundException()
-    {
-    }
-
-    public DepartmentLocationNotFoundException(string message)
-        : base(message)
-    {
-    }
-
-    public DepartmentLocationNotFoundException(string message, Exception innerException)
-        : base(message, innerException)
+    private DepartmentLocationNotFoundException(Error error) : base(error)
     {
     }
 
     public static DepartmentLocationNotFoundException ForIds(Guid departmentId, Guid locationId) =>
-        new($"Location '{locationId}' is not linked to department '{departmentId}'");
+        new(Error.NotFound(
+            "department_location.not_found",
+            $"Location '{locationId}' is not linked to department '{departmentId}'"));
 }
