@@ -16,11 +16,11 @@ public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
         builder.HasKey(d => d.Id);
 
         builder.Property(d => d.Name)
-            .HasConversion(n => n.Value, v => Name.Create(v))
+            .HasConversion(n => n.Value, v => Name.FromValue(v))
             .HasMaxLength(Name.MaxLength);
         
         builder.Property(d => d.Slug)
-            .HasConversion(s => s.Value, v => Slug.Create(v))
+            .HasConversion(s => s.Value, v => Slug.FromValue(v))
             .HasMaxLength(Slug.MaxLength);
 
         builder.Property(d => d.Path)

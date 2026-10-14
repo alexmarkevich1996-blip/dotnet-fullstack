@@ -10,4 +10,8 @@
     <InternalsVisibleTo Include="DirectoryService.Infrastructure.Postgres" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="CSharpFunctionalExtensions" />
+  </ItemGroup>
+
 </Project>

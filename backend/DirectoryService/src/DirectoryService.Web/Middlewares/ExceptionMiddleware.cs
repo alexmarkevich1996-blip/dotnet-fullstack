@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using DirectoryService.Domain.Common.Errors;
+using DirectoryService.Web.Extensions;
 
 namespace DirectoryService.Web.Middlewares;
 
@@ -30,7 +31,7 @@ public partial class ExceptionMiddleware
         {
             LogDomainError(ex, ex.Error.Code);
 
-            context.Response.StatusCode = MapStatusCode(ex.Error.Type);
+            context.Response.StatusCode = ex.Error.Type.ToStatusCode();
             await context.Response.WriteAsJsonAsync(ex.Error);
         }
         catch (Exception ex)
@@ -42,15 +43,6 @@ public partial class ExceptionMiddleware
         }
     }
 
-    private static int MapStatusCode(ErrorType type) => type switch
-    {
-        ErrorType.Validation => StatusCodes.Status400BadRequest,
-        ErrorType.NotFound => StatusCodes.Status404NotFound,
-        ErrorType.Conflict => StatusCodes.Status409Conflict,
-        ErrorType.Internal => StatusCodes.Status500InternalServerError,
-        _ => StatusCodes.Status500InternalServerError,
-    };
-    
     [LoggerMessage(Level = LogLevel.Error, Message = "Domain error: {Code}")]
     private partial void LogDomainError(Exception exception, string code);
 

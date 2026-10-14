@@ -15,11 +15,11 @@ public class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.HasKey(l => l.Id);
 
         builder.Property(l => l.Name)
-            .HasConversion(l => l.Value, v => Name.Create(v))
+            .HasConversion(l => l.Value, v => Name.FromValue(v))
             .HasMaxLength(Name.MaxLength);
 
         builder.Property(l => l.Address)
-            .HasConversion(l => l.Value, v => Address.Create(v))
+            .HasConversion(l => l.Value, v => Address.FromValue(v))
             .HasMaxLength(Address.MaxLength);
 
         builder.Property(l => l.CreatedAt)

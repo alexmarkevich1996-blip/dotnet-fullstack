@@ -1,3 +1,5 @@
+using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Common.Errors;
 using DirectoryService.Domain.Departments.ValueObjects;
 using DirectoryService.Domain.Common.ValueObjects;
 using Path = DirectoryService.Domain.Departments.ValueObjects.Path;
@@ -25,26 +27,29 @@ public class Department
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public static Department Create(Department? parent, Name name, Slug slug)
+    public static Result<Department, ErrorList> Create(Department? parent, Name name, Slug slug)
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(slug);
 
         Guid? parentId;
-        Path path;
+        Result<Path, ErrorList> pathResult;
 
         if (parent is null)
         {
             parentId = null;
-            path = Path.CreateRoot(slug);
+            pathResult = Path.CreateRoot(slug);
         }
         else
         {
             parentId = parent.Id;
-            path = Path.CreateChild(parent.Path, slug);
+            pathResult = Path.CreateChild(parent.Path, slug);
         }
 
-        return new Department(parentId, name, slug, path);
+        if (pathResult.IsFailure)
+            return pathResult.Error;
+
+        return new Department(parentId, name, slug, pathResult.Value);
     }
 
     public void UpdateName(Name name)

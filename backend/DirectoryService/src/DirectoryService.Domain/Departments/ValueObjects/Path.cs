@@ -1,3 +1,6 @@
+using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Common.Errors;
+
 namespace DirectoryService.Domain.Departments.ValueObjects;
 
 public sealed record Path
@@ -10,36 +13,46 @@ public sealed record Path
 
     private Path(string value) => Value = value;
 
-    public static Path CreateRoot(Slug slug)
+    public static Result<Path, ErrorList> CreateRoot(Slug slug)
     {
         ArgumentNullException.ThrowIfNull(slug);
 
         string value = slug.Value;
-        Validate(value);
+        if (!IsValidLength(value))
+        {
+            return Error.Validation("path.invalid_length",
+                $"Path should be between {MinLength} and {MaxLength} characters long").ToErrors();
+        }
 
         return new Path(value);
     }
 
-    public static Path CreateChild(Path parentPath, Slug slug)
+    public static Result<Path, ErrorList> CreateChild(Path parentPath, Slug slug)
     {
         ArgumentNullException.ThrowIfNull(parentPath);
         ArgumentNullException.ThrowIfNull(slug);
 
         string value = parentPath.Value + Separator + slug.Value;
-        Validate(value);
+        if (!IsValidLength(value))
+        {
+            return Error.Validation("path.invalid_length",
+                $"Path should be between {MinLength} and {MaxLength} characters long").ToErrors();
+        }
 
         return new Path(value);
     }
 
-    private static void Validate(string value)
-    {
-        if (value.Length < MinLength || value.Length > MaxLength)
-            throw new ArgumentException($"Path should be between {MinLength} and {MaxLength} characters long", nameof(value));
-    }
+    private static bool IsValidLength(string value) =>
+        value.Length >= MinLength && value.Length <= MaxLength;
 
+    // Восстановление из БД через EF Core HasConversion — доверенные, уже провалидированные
+    // данные из инфраструктуры, а не бизнес-операция клиента, поэтому метод остаётся
+    // бросающим исключение, а не возвращающим Result.
     public static Path FromValue(string value)
     {
-        Validate(value);
+        if (!IsValidLength(value))
+            throw new ArgumentException($"Path should be between {MinLength} and {MaxLength} characters long", nameof(value));
+
         return new Path(value);
     }
 }

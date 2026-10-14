@@ -1,3 +1,6 @@
+using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Common.Errors;
+
 namespace DirectoryService.Domain.Departments;
 
 public class DepartmentLocation
@@ -15,13 +18,13 @@ public class DepartmentLocation
         IsPrimary = isPrimary;
     }
 
-    public static DepartmentLocation Create(Guid departmentId, Guid locationId, bool isPrimary)
+    public static Result<DepartmentLocation, ErrorList> Create(Guid departmentId, Guid locationId, bool isPrimary)
     {
-        if(departmentId == Guid.Empty)
-            throw new ArgumentException("Department id must not be empty", nameof(departmentId));
-        if(locationId == Guid.Empty)
-            throw new ArgumentException("Location id must not be empty", nameof(locationId));
-        
+        if (departmentId == Guid.Empty)
+            return Error.Validation("department_location.department_id_empty", "Department id must not be empty").ToErrors();
+        if (locationId == Guid.Empty)
+            return Error.Validation("department_location.location_id_empty", "Location id must not be empty").ToErrors();
+
         return new DepartmentLocation(departmentId, locationId, isPrimary);
     }
 }
