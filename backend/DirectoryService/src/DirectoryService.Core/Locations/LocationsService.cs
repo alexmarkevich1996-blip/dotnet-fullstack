@@ -1,5 +1,6 @@
+using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Locations;
-using DirectoryService.Core.Validation;
+using DirectoryService.Domain.Common.Errors;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Locations.ValueObjects;
@@ -24,44 +25,60 @@ public partial class LocationsService : ILocationsService
         _logger = logger;
     }
 
-    public async Task<Guid> Create(CreateLocationDto locationDto, CancellationToken cancellationToken)
+    public async Task<Result<Guid, ErrorList>> Create(CreateLocationDto locationDto, CancellationToken cancellationToken)
     {
         var validationResult = await _validator.ValidateAsync(locationDto, cancellationToken);
-
         if (!validationResult.IsValid)
         {
-            throw RequestValidationException.FromValidationErrors(validationResult.Errors);
+            return ErrorList.From(validationResult.Errors
+                .Select(e => Error.Validation($"validation.{e.PropertyName}", e.ErrorMessage)));
         }
-        
-        var existingLocation = await _locationsRepository.GetByNameAsync(locationDto.Name, cancellationToken);
+
+        var nameResult = Name.Create(locationDto.Name);
+        if (nameResult.IsFailure)
+            return nameResult.Error;
+
+        var addressResult = Address.Create(
+            $"{locationDto.City}, {locationDto.Street}, {locationDto.House}, {locationDto.Apartment}");
+        if (addressResult.IsFailure)
+            return addressResult.Error;
+
+        var existingLocation = await _locationsRepository.GetByNameAsync(nameResult.Value, cancellationToken);
         if (existingLocation != null)
         {
-            throw LocationAlreadyExistsException.ForName(locationDto.Name);
+            return Error.Conflict("location.name.duplicate",
+                $"Location with name '{locationDto.Name}' already exists").ToErrors();
         }
-        
-        var name = Name.Create(locationDto.Name);
-        var address = Address.Create($"{locationDto.City}, {locationDto.Street}, {locationDto.House}, {locationDto.Apartment}");
-        var location = Location.Create(name, address);
 
-        await _locationsRepository.AddAsync(location, cancellationToken);
+        var location = Location.Create(nameResult.Value, addressResult.Value);
+
+        var saveResult = await _locationsRepository.AddAsync(location, cancellationToken);
+        if (saveResult.IsFailure)
+            return saveResult.Error;
 
         LogLocationCreated(location.Id);
 
         return location.Id;
     }
 
-    public async Task Update(Guid locationId, UpdateLocationDto request, CancellationToken cancellationToken)
+    public async Task<UnitResult<ErrorList>> Update(Guid locationId, UpdateLocationDto request, CancellationToken cancellationToken)
     {
-        var existingLocation = await _locationsRepository.GetByIdAsync(locationId, cancellationToken);
-        if (existingLocation == null)
-            throw LocationNotFoundException.ForId(locationId);
-        
-        var updatedName = Name.Create(request.Name);
-        var updatedAddress = Address.Create(
-                $"{request.City}, {request.Street}, {request.House}, {request.Apartment}");
-        existingLocation.UpdateDetails(updatedName, updatedAddress);
+        var locationResult = await _locationsRepository.GetByIdAsync(locationId, cancellationToken);
+        if (locationResult.IsFailure)
+            return locationResult.Error;
 
-        await _locationsRepository.UpdateAsync(existingLocation, cancellationToken);
+        var nameResult = Name.Create(request.Name);
+        if (nameResult.IsFailure)
+            return nameResult.Error;
+
+        var addressResult = Address.Create(
+            $"{request.City}, {request.Street}, {request.House}, {request.Apartment}");
+        if (addressResult.IsFailure)
+            return addressResult.Error;
+
+        locationResult.Value.UpdateDetails(nameResult.Value, addressResult.Value);
+
+        return await _locationsRepository.UpdateAsync(locationResult.Value, cancellationToken);
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Location created with id {LocationId}")]

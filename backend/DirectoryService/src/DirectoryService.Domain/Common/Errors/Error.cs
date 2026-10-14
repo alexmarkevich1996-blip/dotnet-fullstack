@@ -27,4 +27,6 @@ public sealed record Error
         new(code, message, ErrorType.Validation);
     public static Error Internal(string code, string message) =>
         new(code, message, ErrorType.Internal);
+
+    public ErrorList ToErrors() => ErrorList.FromError(this);
 }

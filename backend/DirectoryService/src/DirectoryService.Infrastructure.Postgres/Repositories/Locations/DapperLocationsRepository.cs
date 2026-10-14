@@ -1,21 +1,26 @@
 using Dapper;
+using CSharpFunctionalExtensions;
 using DirectoryService.Core.Locations;
+using DirectoryService.Domain.Common.Errors;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Locations;
 using DirectoryService.Domain.Locations.ValueObjects;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 
-public class DapperLocationsRepository : ILocationsRepository
+public partial class DapperLocationsRepository : ILocationsRepository
 {
     private readonly NpgsqlDataSource _dataSource;
+    private readonly ILogger<DapperLocationsRepository> _logger;
 
-    public DapperLocationsRepository(NpgsqlDataSource dataSource)
+    public DapperLocationsRepository(NpgsqlDataSource dataSource, ILogger<DapperLocationsRepository> logger)
     {
         _dataSource = dataSource;
+        _logger = logger;
     }
-    public async Task<Guid> AddAsync(Location location, CancellationToken cancellationToken)
+    public async Task<Result<Guid, ErrorList>> AddAsync(Location location, CancellationToken cancellationToken)
     {
         const string locationInsertSql = """
                                          INSERT INTO locations (id, name, address, created_at, updated_at)
@@ -31,20 +36,28 @@ public class DapperLocationsRepository : ILocationsRepository
             location.UpdatedAt
         };
 
-        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
-        await connection.ExecuteAsync(new CommandDefinition(
-            locationInsertSql,
-            locationsInsertParams,
-            cancellationToken: cancellationToken));
-        return location.Id;
+        try
+        {
+            await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+            await connection.ExecuteAsync(new CommandDefinition(
+                locationInsertSql,
+                locationsInsertParams,
+                cancellationToken: cancellationToken));
+            return location.Id;
+        }
+        catch (NpgsqlException ex)
+        {
+            LogSaveFailed(ex, location.Id);
+            return Error.Internal("location.save_failed", "Failed to save location").ToErrors();
+        }
     }
 
-    public Task UpdateAsync(Location location, CancellationToken cancellationToken)
+    public Task<UnitResult<ErrorList>> UpdateAsync(Location location, CancellationToken cancellationToken)
     {
         throw new NotSupportedException("not implemented yet");
     }
 
-    public async Task<Location?> GetByNameAsync(string name, CancellationToken cancellationToken)
+    public async Task<Location?> GetByNameAsync(Name name, CancellationToken cancellationToken)
     {
         const string sql = """
                            SELECT
@@ -61,21 +74,21 @@ public class DapperLocationsRepository : ILocationsRepository
         LocationRow? row = await connection.QuerySingleOrDefaultAsync<LocationRow>(
             new CommandDefinition(
                 sql,
-                new { Name = name },
+                new { Name = name.Value },
                 cancellationToken: cancellationToken));
-        
+
         if (row == null)
             return null;
-        
+
         return Location.Rehydrate(
             row.Id,
-            Name.Create(row.Name),
-            Address.Create(row.Address),
+            Name.FromValue(row.Name),
+            Address.FromValue(row.Address),
             row.CreatedAt,
             row.UpdatedAt
         );
     }
-    
+
 
     public Task<Guid> SaveAsync(Location location, CancellationToken cancellationToken)
     {
@@ -87,7 +100,7 @@ public class DapperLocationsRepository : ILocationsRepository
         throw new NotSupportedException("Not implemented yet");
     }
 
-    public async Task<Location?> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
+    public async Task<Result<Location, ErrorList>> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
     {
         const string sql = """
                            SELECT
@@ -108,12 +121,12 @@ public class DapperLocationsRepository : ILocationsRepository
                 cancellationToken: cancellationToken));
 
         if (row == null)
-            return null;
+            return Error.NotFound("location.not_found", $"Location with id '{locationId}' was not found").ToErrors();
 
         return Location.Rehydrate(
             row.Id,
-            Name.Create(row.Name),
-            Address.Create(row.Address),
+            Name.FromValue(row.Name),
+            Address.FromValue(row.Address),
             row.CreatedAt,
             row.UpdatedAt
         );
@@ -134,4 +147,7 @@ public class DapperLocationsRepository : ILocationsRepository
 
         return existingIds.ToList();
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save location {LocationId}")]
+    private partial void LogSaveFailed(Exception exception, Guid locationId);
 }

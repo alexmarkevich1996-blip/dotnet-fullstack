@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Common.Errors;
 
 namespace DirectoryService.Domain.Departments.ValueObjects;
 
@@ -15,20 +17,35 @@ public partial record Slug
         "Globalization",
         "CA1308:Normalize strings to uppercase",
         Justification = "Slug must be stored lowercase by convention (URLs, tree paths); this is not a case-insensitive comparison.")]
-    public static Slug Create(string value)
+    public static Result<Slug, ErrorList> Create(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
         string normalized = value.Trim().ToLowerInvariant();
-        
-        if(normalized.Length < MinLength || normalized.Length > MaxLength)
-            throw new ArgumentException($"slug should be between {MinLength} and {MaxLength} characters long", nameof(value));
-        
-        if(!SlugPattern().IsMatch(normalized))
-            throw new ArgumentException($"lowercase Latin letters, digits, and hyphens only; must not start or end with a hyphen", nameof(value));
+
+        if (normalized.Length < MinLength || normalized.Length > MaxLength)
+            return Error.Validation("slug.invalid_length", $"slug should be between {MinLength} and {MaxLength} characters long").ToErrors();
+
+        if (!SlugPattern().IsMatch(normalized))
+            return Error.Validation("slug.invalid_format",
+                "lowercase Latin letters, digits, and hyphens only; must not start or end with a hyphen").ToErrors();
         
         return new Slug(normalized);
     }
-    
+
+    // Восстановление из БД (EF Core HasConversion) — доверенные, уже провалидированные данные
+    // из инфраструктуры, а не бизнес-операция клиента, поэтому остаётся throwing.
+    public static Slug FromValue(string value)
+    {
+        if (value.Length < MinLength || value.Length > MaxLength)
+            throw new ArgumentException($"slug should be between {MinLength} and {MaxLength} characters long", nameof(value));
+
+        if (!SlugPattern().IsMatch(value))
+            throw new ArgumentException(
+                "lowercase Latin letters, digits, and hyphens only; must not start or end with a hyphen", nameof(value));
+
+        return new Slug(value);
+    }
+
     [GeneratedRegex(@"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex SlugPattern();
 }
