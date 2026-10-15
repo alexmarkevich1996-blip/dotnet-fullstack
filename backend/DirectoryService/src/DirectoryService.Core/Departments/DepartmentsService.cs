@@ -173,6 +173,24 @@ public partial class DepartmentsService : IDepartmentsService
         return await _departmentsRepository.RemoveLocationAsync(departmentId, locationId, cancellationToken);
     }
 
+    public async Task<Result<DepartmentResponseDto, ErrorList>> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var departmentResult = await _departmentsRepository.GetByIdAsync(id, cancellationToken);
+        if(departmentResult.IsFailure)
+            return departmentResult.Error;
+        
+        var department = departmentResult.Value;
+        
+        return new DepartmentResponseDto(
+            department.Id,
+            department.Name.Value,
+            department.Slug.Value,
+            department.Path.Value,
+            department.ParentId,
+            department.CreatedAt,
+            department.UpdatedAt);
+    }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Department created with id {DepartmentId}")]
     private partial void LogDepartmentCreated(Guid departmentId);
 }

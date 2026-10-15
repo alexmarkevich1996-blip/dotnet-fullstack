@@ -10,4 +10,5 @@ public interface IDepartmentsService
     public Task<UnitResult<ErrorList>> Update(Guid id, UpdateDepartmentDto departmentDto, CancellationToken cancellationToken);
     public Task<UnitResult<ErrorList>> AddLocation(Guid departmentId, Guid locationId, CancellationToken cancellationToken);
     public Task<UnitResult<ErrorList>> RemoveLocation(Guid departmentId, Guid locationId, CancellationToken cancellationToken);
+    public Task<Result<DepartmentResponseDto, ErrorList>> GetById(Guid id, CancellationToken cancellationToken);
 }
