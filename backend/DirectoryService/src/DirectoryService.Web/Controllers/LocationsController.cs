@@ -1,5 +1,6 @@
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Core.Locations;
+using DirectoryService.Web.Contracts;
 using DirectoryService.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,18 +17,26 @@ public class LocationsController : ControllerBase
         _locationsService = locationsService;
     }
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateLocationDto request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(Envelope<Guid>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IResult> Create([FromBody] CreateLocationDto request, CancellationToken cancellationToken)
     {
         var result = await _locationsService.Create(request, cancellationToken);
-        return result.IsSuccess ? Ok(result.Value) : result.Error.ToResponse();
+        return result.ToApiResult(StatusCodes.Status201Created);
     }
 
     [HttpPatch("{locationId:guid}")]
-    public async Task<IActionResult> Update([FromRoute] Guid locationId, [FromBody] UpdateLocationDto request,
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IResult> Update([FromRoute] Guid locationId, [FromBody] UpdateLocationDto request,
         CancellationToken cancellationToken)
     {
         var result = await _locationsService.Update(locationId, request, cancellationToken);
-        return result.IsSuccess ? NoContent() : result.Error.ToResponse();
+        return result.ToApiResult();
     }
 
     [HttpGet]

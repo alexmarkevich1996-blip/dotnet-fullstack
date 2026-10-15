@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using DirectoryService.Domain.Common.Errors;
+using DirectoryService.Web.Contracts;
 using DirectoryService.Web.Extensions;
 
 namespace DirectoryService.Web.Middlewares;
@@ -30,16 +31,15 @@ public partial class ExceptionMiddleware
         catch (DomainException ex)
         {
             LogDomainError(ex, ex.Error.Code);
-
             context.Response.StatusCode = ex.Error.Type.ToStatusCode();
-            await context.Response.WriteAsJsonAsync(ex.Error);
+            await context.Response.WriteAsJsonAsync(Envelope.Fail(ex.Error.ToErrors()));
         }
         catch (Exception ex)
         {
             LogUnhandledException(ex);
-
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsJsonAsync(new { message = "Internal server error" });
+            var error = Error.Internal("internal_error", "Internal Server Error");
+            await context.Response.WriteAsJsonAsync(Envelope.Fail(error.ToErrors()));
         }
     }
 

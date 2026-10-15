@@ -1,5 +1,9 @@
+using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Positions;
+using DirectoryService.Domain.Common.Errors;
+using DirectoryService.Web.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using IResult = Microsoft.AspNetCore.Http.IResult;
 
 namespace DirectoryService.Web.Controllers;
 
@@ -8,34 +12,35 @@ namespace DirectoryService.Web.Controllers;
 public class PositionsController : ControllerBase
 {
     [HttpPost]
-    public IActionResult Create([FromBody] CreatePositionDto request, CancellationToken cancellationToken)
+    public IResult Create([FromBody] CreatePositionDto request, CancellationToken cancellationToken)
     {
         Guid newPositionId = Guid.NewGuid();
-        return CreatedAtAction(nameof(GetById), new { positionId = newPositionId }, newPositionId);
+        return Results.Json(Envelope.Ok(newPositionId), statusCode: StatusCodes.Status201Created);
     }
 
     [HttpGet]
-    public IActionResult Get([FromQuery] GetPositionDto request, CancellationToken cancellationToken)
+    public IResult Get([FromQuery] GetPositionDto request, CancellationToken cancellationToken)
     {
-        return Ok(Array.Empty<object>());
+        return Results.Json(Envelope.Ok(Array.Empty<object>()));
     }
 
     [HttpGet("{positionId:guid}")]
-    public IActionResult GetById([FromRoute] Guid positionId, CancellationToken cancellationToken)
+    public IResult GetById([FromRoute] Guid positionId, CancellationToken cancellationToken)
     {
-        return NotFound();
+        var error = Error.NotFound("position.not_found", $"Position with id '{positionId}' was not found");
+        return Results.Json(Envelope.Fail(error.ToErrors()), statusCode: StatusCodes.Status404NotFound);
     }
 
     [HttpPut("{positionId:guid}")]
-    public IActionResult Update([FromRoute] Guid positionId, [FromBody] UpdatePositionDto request,
+    public IResult Update([FromRoute] Guid positionId, [FromBody] UpdatePositionDto request,
         CancellationToken cancellationToken)
     {
-        return NoContent();
+        return Results.Json(Envelope.Ok<object?>(null));
     }
 
     [HttpDelete("{positionId:guid}")]
-    public IActionResult Delete([FromRoute] Guid positionId, CancellationToken cancellationToken)
+    public IResult Delete([FromRoute] Guid positionId, CancellationToken cancellationToken)
     {
-        return NoContent();
+        return Results.Json(Envelope.Ok<object?>(null));
     }
 }
