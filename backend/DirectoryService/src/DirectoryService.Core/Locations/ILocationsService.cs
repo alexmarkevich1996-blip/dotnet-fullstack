@@ -8,4 +8,5 @@ public interface ILocationsService
 {
     public Task<Result<Guid, ErrorList>> Create(CreateLocationDto locationDto, CancellationToken cancellationToken);
     public Task<UnitResult<ErrorList>> Update(Guid locationId, UpdateLocationDto request, CancellationToken cancellationToken);
+    public Task<Result<IReadOnlyCollection<object>, ErrorList>> GetAll(GetLocationDto request, CancellationToken cancellationToken);
 }

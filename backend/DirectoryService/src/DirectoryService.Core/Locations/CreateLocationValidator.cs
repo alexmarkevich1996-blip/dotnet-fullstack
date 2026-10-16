@@ -13,10 +13,10 @@ public class CreateLocationValidator : AbstractValidator<CreateLocationDto>
     {
         RuleFor(x => x.Name).MustBeValueObject(Name.Create);
         
-        RuleFor(x => x.City).NotEmpty().MaximumLength(75).WithMessage("City is not valid");
-        RuleFor(x => x.Street).NotEmpty().MaximumLength(75).WithMessage("Street is not valid");
-        RuleFor(x => x.House).NotEmpty().MaximumLength(75).WithMessage("House is not valid");
-        RuleFor(x => x.Apartment).NotEmpty().MaximumLength(75).WithMessage("Apartment is not valid");
+        RuleFor(x => x.City).NotEmpty().WithMessage("City is not valid").MaximumLength(75).WithMessage("City is not valid");
+        RuleFor(x => x.Street).NotEmpty().WithMessage("Street is not valid").MaximumLength(75).WithMessage("Street is not valid");
+        RuleFor(x => x.House).NotEmpty().WithMessage("House is not valid").MaximumLength(75).WithMessage("House is not valid");
+        RuleFor(x => x.Apartment).NotEmpty().WithMessage("Apartment is not valid").MaximumLength(75).WithMessage("Apartment is not valid");
 
         RuleFor(x => x).Custom((dto, context) =>
         {

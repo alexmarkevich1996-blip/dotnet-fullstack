@@ -14,15 +14,18 @@ public partial class LocationsService : ILocationsService
 {
     private readonly ILocationsRepository _locationsRepository;
     private readonly IValidator<CreateLocationDto> _validator;
+    private readonly IValidator<GetLocationDto> _getValidator;
     private readonly ILogger<LocationsService> _logger;
 
     public LocationsService(
         ILocationsRepository locationsRepository,
         IValidator<CreateLocationDto> validator,
+        IValidator<GetLocationDto> getValidator,
         ILogger<LocationsService> logger)
     {
         _locationsRepository = locationsRepository;
         _validator = validator;
+        _getValidator = getValidator;
         _logger = logger;
     }
 
@@ -79,6 +82,15 @@ public partial class LocationsService : ILocationsService
         locationResult.Value.UpdateDetails(nameResult.Value, addressResult.Value);
 
         return await _locationsRepository.UpdateAsync(locationResult.Value, cancellationToken);
+    }
+
+    public async Task<Result<IReadOnlyCollection<object>, ErrorList>> GetAll(GetLocationDto request, CancellationToken cancellationToken)
+    {
+        var validationResult = await _getValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+            return validationResult.ToErrorList();
+
+        return Array.Empty<object>();
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Location created with id {LocationId}")]

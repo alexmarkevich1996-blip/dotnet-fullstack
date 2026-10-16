@@ -3,6 +3,7 @@ using DirectoryService.Core.Locations;
 using DirectoryService.Web.Contracts;
 using DirectoryService.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using IResult = Microsoft.AspNetCore.Http.IResult;
 
 namespace DirectoryService.Web.Controllers;
 
@@ -40,9 +41,12 @@ public class LocationsController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Get([FromQuery] GetLocationDto request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(Envelope<IReadOnlyCollection<object>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IResult> Get([FromQuery] GetLocationDto request, CancellationToken cancellationToken)
     {
-        return Ok(Array.Empty<object>());
+        var result = await _locationsService.GetAll(request, cancellationToken);
+        return result.ToApiResult();
     }
 
     [HttpGet("{locationId:guid}")]
