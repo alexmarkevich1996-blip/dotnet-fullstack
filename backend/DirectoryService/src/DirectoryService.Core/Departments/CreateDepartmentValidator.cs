@@ -1,4 +1,7 @@
 using DirectoryService.Contracts.Departments;
+using DirectoryService.Core.Validation;
+using DirectoryService.Domain.Common.ValueObjects;
+using DirectoryService.Domain.Departments.ValueObjects;
 using FluentValidation;
 
 namespace DirectoryService.Core.Departments;
@@ -7,15 +10,7 @@ public class CreateDepartmentValidator : AbstractValidator<CreateDepartmentDto>
 {
     public CreateDepartmentValidator()
     {
-        RuleFor(d => d.Name)
-            .NotEmpty()
-            .MinimumLength(2)
-            .MaximumLength(64)
-            .WithMessage("Name is not valid");
-        RuleFor(d => d.Slug)
-            .NotEmpty()
-            .MinimumLength(2)
-            .MaximumLength(100)
-            .WithMessage("Slug is not valid");
+        RuleFor(x => x.Name).MustBeValueObject(Name.Create);
+        RuleFor(x => x.Slug).MustBeValueObject(Slug.Create);
     }
 }

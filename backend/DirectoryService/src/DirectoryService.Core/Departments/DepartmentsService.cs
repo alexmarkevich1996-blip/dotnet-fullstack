@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Core.Locations;
+using DirectoryService.Core.Validation;
 using DirectoryService.Domain.Common.Errors;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Departments;
@@ -34,8 +35,7 @@ public partial class DepartmentsService : IDepartmentsService
         var validationResult = await _validator.ValidateAsync(departmentDto, cancellationToken);
         if (!validationResult.IsValid)
         {
-            return ErrorList.From(validationResult.Errors
-                .Select(e => Error.Validation($"validation.{e.PropertyName}", e.ErrorMessage)));
+            return validationResult.ToErrorList();
         }
 
         var nameResult = Name.Create(departmentDto.Name);

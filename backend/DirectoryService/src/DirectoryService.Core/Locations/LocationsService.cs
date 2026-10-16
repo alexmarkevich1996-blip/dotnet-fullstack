@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Locations;
+using DirectoryService.Core.Validation;
 using DirectoryService.Domain.Common.Errors;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Locations;
@@ -30,8 +31,7 @@ public partial class LocationsService : ILocationsService
         var validationResult = await _validator.ValidateAsync(locationDto, cancellationToken);
         if (!validationResult.IsValid)
         {
-            return ErrorList.From(validationResult.Errors
-                .Select(e => Error.Validation($"validation.{e.PropertyName}", e.ErrorMessage)));
+            return validationResult.ToErrorList();
         }
 
         var nameResult = Name.Create(locationDto.Name);
