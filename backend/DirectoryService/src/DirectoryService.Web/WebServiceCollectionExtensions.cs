@@ -17,7 +17,11 @@ public static class WebServiceCollectionExtensions
     private static IServiceCollection AddWebDependencies(this IServiceCollection services)
     {
         services.AddOpenApi();
-        services.AddControllers();
+        services.AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
         services.AddHealthChecks();
         services.AddRouting(options => options.LowercaseUrls = true);
         
