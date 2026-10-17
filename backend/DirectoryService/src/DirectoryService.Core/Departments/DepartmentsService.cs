@@ -49,6 +49,7 @@ public partial class DepartmentsService : IDepartmentsService
         var existingDepartment = await _departmentsRepository.GetByNameAsync(nameResult.Value, cancellationToken);
         if (existingDepartment != null)
         {
+            LogDepartmentNameConflict(departmentDto.Name);
             return Error.Conflict("department.name.duplicate",
                 $"Department with name '{departmentDto.Name}' already exists").ToErrors();
         }
@@ -148,6 +149,7 @@ public partial class DepartmentsService : IDepartmentsService
             await _departmentsRepository.LocationLinkExistsAsync(departmentId, locationId, cancellationToken);
         if (linkExists)
         {
+            LogDepartmentLocationConflict(departmentId,  locationId);
             return Error.Conflict("department_location.already_exists",
                 $"Location '{locationId}' is already linked to department '{departmentId}'").ToErrors();
         }
@@ -158,9 +160,7 @@ public partial class DepartmentsService : IDepartmentsService
 
         var result = await _departmentsRepository.AddLocationAsync(departmentLocationResult.Value, cancellationToken);
         if (result.IsSuccess)
-        {
             LogLocationAddedToDepartment(departmentId, locationId);
-        }
         
         return result;
     }
@@ -206,6 +206,7 @@ public partial class DepartmentsService : IDepartmentsService
             department.CreatedAt,
             department.UpdatedAt);
     }
+    
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Department created with id {DepartmentId}")]
     private partial void LogDepartmentCreated(Guid departmentId);
@@ -218,4 +219,10 @@ public partial class DepartmentsService : IDepartmentsService
     
     [LoggerMessage(Level = LogLevel.Information, Message = "Location {LocationId} removed from department {DepartmentId}")]
     private partial void LogLocationRemovedFromDepartment(Guid departmentId, Guid locationId);
+    
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to create department with duplicate name {DepartmentName}")]
+    private partial void LogDepartmentNameConflict(string departmentName);
+    
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to link already-linked location {LocationId} to department {DepartmentId}")]
+    private partial void LogDepartmentLocationConflict(Guid departmentId, Guid locationId);
 }

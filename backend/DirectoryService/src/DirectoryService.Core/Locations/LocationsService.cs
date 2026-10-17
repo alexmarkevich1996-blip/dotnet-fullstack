@@ -49,6 +49,7 @@ public partial class LocationsService : ILocationsService
         var existingLocation = await _locationsRepository.GetByNameAsync(nameResult.Value, cancellationToken);
         if (existingLocation != null)
         {
+            LogLocationNameConflict(locationDto.Name);
             return Error.Conflict("location.name.duplicate",
                 $"Location with name '{locationDto.Name}' already exists").ToErrors();
         }
@@ -102,4 +103,7 @@ public partial class LocationsService : ILocationsService
     
     [LoggerMessage(Level = LogLevel.Information, Message = "Location {LocationId} updated")]
     private partial void LogLocationUpdated(Guid locationId);
+    
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to create location with duplicate name {LocationName}")]
+    private partial void LogLocationNameConflict(string locationName);
 }
