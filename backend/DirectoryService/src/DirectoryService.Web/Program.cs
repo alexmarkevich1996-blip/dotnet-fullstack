@@ -12,6 +12,13 @@ builder.Services.AddSerilog((services, config) => config
 
 WebApplication app = builder.Build();
 
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = ((diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestId", httpContext.TraceIdentifier);
+    });
+});
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.MapGet("/", () => "Hello World!");
