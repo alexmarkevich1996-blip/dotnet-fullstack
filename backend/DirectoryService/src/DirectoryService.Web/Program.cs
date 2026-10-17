@@ -1,10 +1,14 @@
 using DirectoryService.Web;
 using DirectoryService.Web.Middlewares;
 using Scalar.AspNetCore;
+using Serilog;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddProgramDependencies(builder.Configuration);
+builder.Services.AddSerilog((services, config) => config
+    .ReadFrom.Configuration(builder.Configuration)
+    .ReadFrom.Services(services));
 
 WebApplication app = builder.Build();
 
