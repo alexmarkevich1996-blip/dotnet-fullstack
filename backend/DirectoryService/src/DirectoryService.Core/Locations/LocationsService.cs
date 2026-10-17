@@ -81,7 +81,11 @@ public partial class LocationsService : ILocationsService
 
         locationResult.Value.UpdateDetails(nameResult.Value, addressResult.Value);
 
-        return await _locationsRepository.UpdateAsync(locationResult.Value, cancellationToken);
+        var result = await _locationsRepository.UpdateAsync(locationResult.Value, cancellationToken);
+        if(result.IsSuccess)
+            LogLocationUpdated(locationId);
+
+        return result;
     }
 
     public async Task<Result<IReadOnlyCollection<object>, ErrorList>> GetAll(GetLocationDto request, CancellationToken cancellationToken)
@@ -95,4 +99,7 @@ public partial class LocationsService : ILocationsService
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Location created with id {LocationId}")]
     private partial void LogLocationCreated(Guid locationId);
+    
+    [LoggerMessage(Level = LogLevel.Information, Message = "Location {LocationId} updated")]
+    private partial void LogLocationUpdated(Guid locationId);
 }

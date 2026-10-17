@@ -126,10 +126,15 @@ public partial class DepartmentsService : IDepartmentsService
 
         departmentResult.Value.UpdateName(nameResult.Value);
 
-        return await _departmentsRepository.UpdateAsync(departmentResult.Value, cancellationToken);
+        var result = await _departmentsRepository.UpdateAsync(departmentResult.Value, cancellationToken);
+        if (result.IsSuccess)
+            LogDepartmentUpdated(id);
+
+        return result;
     }
 
-    public async Task<UnitResult<ErrorList>> AddLocation(Guid departmentId, Guid locationId, CancellationToken cancellationToken)
+    public async Task<UnitResult<ErrorList>> AddLocation(Guid departmentId, Guid locationId,
+        CancellationToken cancellationToken)
     {
         var locationResult = await _locationsRepository.GetByIdAsync(locationId, cancellationToken);
         if (locationResult.IsFailure)
@@ -139,7 +144,8 @@ public partial class DepartmentsService : IDepartmentsService
         if (departmentResult.IsFailure)
             return departmentResult.Error;
 
-        var linkExists = await _departmentsRepository.LocationLinkExistsAsync(departmentId, locationId, cancellationToken);
+        var linkExists =
+            await _departmentsRepository.LocationLinkExistsAsync(departmentId, locationId, cancellationToken);
         if (linkExists)
         {
             return Error.Conflict("department_location.already_exists",
@@ -150,7 +156,13 @@ public partial class DepartmentsService : IDepartmentsService
         if (departmentLocationResult.IsFailure)
             return departmentLocationResult.Error;
 
-        return await _departmentsRepository.AddLocationAsync(departmentLocationResult.Value, cancellationToken);
+        var result = await _departmentsRepository.AddLocationAsync(departmentLocationResult.Value, cancellationToken);
+        if (result.IsSuccess)
+        {
+            LogLocationAddedToDepartment(departmentId, locationId);
+        }
+        
+        return result;
     }
 
     public async Task<UnitResult<ErrorList>> RemoveLocation(Guid departmentId, Guid locationId, CancellationToken cancellationToken)
@@ -170,7 +182,11 @@ public partial class DepartmentsService : IDepartmentsService
                 $"Location '{locationId}' is not linked to department '{departmentId}'").ToErrors();
         }
 
-        return await _departmentsRepository.RemoveLocationAsync(departmentId, locationId, cancellationToken);
+        var result = await _departmentsRepository.RemoveLocationAsync(departmentId, locationId, cancellationToken);
+        if(result.IsSuccess)
+            LogLocationRemovedFromDepartment(departmentId, locationId);
+
+        return result;
     }
 
     public async Task<Result<DepartmentResponseDto, ErrorList>> GetById(Guid id, CancellationToken cancellationToken)
@@ -193,4 +209,13 @@ public partial class DepartmentsService : IDepartmentsService
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Department created with id {DepartmentId}")]
     private partial void LogDepartmentCreated(Guid departmentId);
+    
+    [LoggerMessage(Level = LogLevel.Information, Message = "Department {DepartmentId} updated")]
+    private partial void LogDepartmentUpdated(Guid departmentId);
+    
+    [LoggerMessage(Level = LogLevel.Information, Message = "Location {LocationId} added to department {DepartmentId}")]
+    private partial void LogLocationAddedToDepartment(Guid departmentId, Guid locationId);
+    
+    [LoggerMessage(Level = LogLevel.Information, Message = "Location {LocationId} removed from department {DepartmentId}")]
+    private partial void LogLocationRemovedFromDepartment(Guid departmentId, Guid locationId);
 }
