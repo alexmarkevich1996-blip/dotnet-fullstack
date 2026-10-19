@@ -8,7 +8,6 @@ namespace DirectoryService.Core.Locations;
 public interface ILocationsRepository
 {
     Task<Result<Guid, ErrorList>> AddAsync(Location location, CancellationToken cancellationToken);
-    Task<UnitResult<ErrorList>> UpdateAsync(Location location, CancellationToken cancellationToken);
 
     Task<Guid> SaveAsync(Location location, CancellationToken cancellationToken);
 
