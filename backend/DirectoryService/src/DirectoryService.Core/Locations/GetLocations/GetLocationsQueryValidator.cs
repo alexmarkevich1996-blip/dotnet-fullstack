@@ -1,13 +1,12 @@
-using DirectoryService.Contracts.Locations;
 using DirectoryService.Core.Validation;
 using DirectoryService.Domain.Common.Errors;
 using FluentValidation;
 
-namespace DirectoryService.Core.Locations;
+namespace DirectoryService.Core.Locations.GetLocations;
 
-public class GetLocationValidator : AbstractValidator<GetLocationDto>
+public class GetLocationsQueryValidator : AbstractValidator<GetLocationsQuery>
 {
-    public GetLocationValidator()
+    public GetLocationsQueryValidator()
     {
         RuleFor(x => x.Page)
             .MustSatisfy(

@@ -1,20 +1,49 @@
+using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Departments;
-using DirectoryService.Core.Departments;
+using DirectoryService.Core.Abstractions;
+using DirectoryService.Core.Departments.AddDepartmentLocation;
+using DirectoryService.Core.Departments.CreateDepartment;
+using DirectoryService.Core.Departments.GetDepartmentById;
+using DirectoryService.Core.Departments.RemoveDepartmentLocation;
+using DirectoryService.Core.Departments.UpdateDepartment;
+using DirectoryService.Domain.Common.Errors;
 using DirectoryService.Web.Contracts;
 using DirectoryService.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using IResult = Microsoft.AspNetCore.Http.IResult;
 
 namespace DirectoryService.Web.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Design",
+    "S6960:Controllers should not have too many responsibilities",
+    Justification = "Each injected handler encapsulates exactly one CQRS use case; the " +
+                     "controller stays a thin HTTP boundary that only dispatches to them, it does not " +
+                     "itself mix responsibilities.")]
 public class DepartmentsController : ControllerBase
 {
-    private readonly IDepartmentsService _departmentsService;
-    public DepartmentsController(IDepartmentsService departmentsService)
+    private readonly ICommandHandler<CreateDepartmentCommand, Result<Guid, ErrorList>> _createHandler;
+    private readonly ICommandHandler<UpdateDepartmentCommand, UnitResult<ErrorList>> _updateHandler;
+    private readonly ICommandHandler<AddDepartmentLocationCommand, UnitResult<ErrorList>> _addLocationHandler;
+    private readonly ICommandHandler<RemoveDepartmentLocationCommand, UnitResult<ErrorList>> _removeLocationHandler;
+    private readonly IQueryHandler<GetDepartmentByIdQuery, Result<DepartmentResponseDto, ErrorList>> _getByIdHandler;
+
+    public DepartmentsController(
+        ICommandHandler<CreateDepartmentCommand, Result<Guid, ErrorList>> createHandler,
+        ICommandHandler<UpdateDepartmentCommand, UnitResult<ErrorList>> updateHandler,
+        ICommandHandler<AddDepartmentLocationCommand, UnitResult<ErrorList>> addLocationHandler,
+        ICommandHandler<RemoveDepartmentLocationCommand, UnitResult<ErrorList>> removeLocationHandler,
+        IQueryHandler<GetDepartmentByIdQuery, Result<DepartmentResponseDto, ErrorList>> getByIdHandler)
     {
-        _departmentsService = departmentsService;
+        _createHandler = createHandler;
+        _updateHandler = updateHandler;
+        _addLocationHandler = addLocationHandler;
+        _removeLocationHandler = removeLocationHandler;
+        _getByIdHandler = getByIdHandler;
     }
+
     [HttpPost]
     [ProducesResponseType(typeof(Envelope<Guid>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status400BadRequest)]
@@ -23,7 +52,8 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status500InternalServerError)]
     public async Task<IResult> Create([FromBody] CreateDepartmentDto request, CancellationToken cancellationToken)
     {
-        var result = await _departmentsService.Create(request, cancellationToken);
+        var command = new CreateDepartmentCommand(request.Name, request.Slug, request.ParentId, request.LocationIds);
+        var result = await _createHandler.Handle(command, cancellationToken);
         return result.ToApiResult(StatusCodes.Status201Created);
     }
 
@@ -36,7 +66,8 @@ public class DepartmentsController : ControllerBase
     public async Task<IResult> AddLocation([FromRoute] Guid departmentId, [FromRoute] Guid locationId,
         CancellationToken cancellationToken)
     {
-        var result = await _departmentsService.AddLocation(departmentId, locationId, cancellationToken);
+        var command = new AddDepartmentLocationCommand(departmentId, locationId);
+        var result = await _addLocationHandler.Handle(command, cancellationToken);
         return result.ToApiResult();
     }
 
@@ -47,7 +78,8 @@ public class DepartmentsController : ControllerBase
     public async Task<IResult> RemoveLocation([FromRoute] Guid departmentId, [FromRoute] Guid locationId,
         CancellationToken cancellationToken)
     {
-        var result = await _departmentsService.RemoveLocation(departmentId, locationId, cancellationToken);
+        var command = new RemoveDepartmentLocationCommand(departmentId, locationId);
+        var result = await _removeLocationHandler.Handle(command, cancellationToken);
         return result.ToApiResult();
     }
 
@@ -59,7 +91,8 @@ public class DepartmentsController : ControllerBase
     public async Task<IResult> Update([FromRoute] Guid departmentId, [FromBody] UpdateDepartmentDto request,
         CancellationToken cancellationToken)
     {
-        var result = await _departmentsService.Update(departmentId, request, cancellationToken);
+        var command = new UpdateDepartmentCommand(departmentId, request.Name);
+        var result = await _updateHandler.Handle(command, cancellationToken);
         return result.ToApiResult();
     }
 
@@ -68,10 +101,11 @@ public class DepartmentsController : ControllerBase
     [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status404NotFound)]
     public async Task<IResult> GetById([FromRoute] Guid departmentId, CancellationToken cancellationToken)
     {
-        var result = await _departmentsService.GetById(departmentId, cancellationToken);
+        var query = new GetDepartmentByIdQuery(departmentId);
+        var result = await _getByIdHandler.Handle(query, cancellationToken);
         return result.ToApiResult();
     }
-    
+
     [HttpGet]
     public IActionResult Get([FromQuery] GetDepartmentDto request, CancellationToken cancellationToken)
     {
