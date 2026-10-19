@@ -52,11 +52,6 @@ public partial class DapperLocationsRepository : ILocationsRepository
         }
     }
 
-    public Task<UnitResult<ErrorList>> UpdateAsync(Location location, CancellationToken cancellationToken)
-    {
-        throw new NotSupportedException("not implemented yet");
-    }
-
     public async Task<Location?> GetByNameAsync(Name name, CancellationToken cancellationToken)
     {
         const string sql = """

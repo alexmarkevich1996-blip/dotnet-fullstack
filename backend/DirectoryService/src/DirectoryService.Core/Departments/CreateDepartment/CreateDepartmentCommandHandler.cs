@@ -18,17 +18,20 @@ public partial class CreateDepartmentCommandHandler
     private readonly IDepartmentsRepository _departmentsRepository;
     private readonly ILocationsRepository _locationsRepository;
     private readonly IValidator<CreateDepartmentCommand> _validator;
+    private readonly ITransactionManager _transactionManager;
     private readonly ILogger<CreateDepartmentCommandHandler> _logger;
 
     public CreateDepartmentCommandHandler(
         IDepartmentsRepository departmentsRepository,
         ILocationsRepository locationsRepository,
         IValidator<CreateDepartmentCommand> validator,
+        ITransactionManager transactionManager,
         ILogger<CreateDepartmentCommandHandler> logger)
     {
         _departmentsRepository = departmentsRepository;
         _locationsRepository = locationsRepository;
         _validator = validator;
+        _transactionManager = transactionManager;
         _logger = logger;
     }
     
@@ -93,13 +96,26 @@ public partial class CreateDepartmentCommandHandler
         if (departmentLocationsResult.IsFailure)
             return departmentLocationsResult.Error;
 
-        var saveResult = await _departmentsRepository.AddAsync(department, departmentLocationsResult.Value, cancellationToken);
-        if (saveResult.IsFailure)
-            return saveResult.Error;
+        var transactionResult = await _transactionManager.ExecuteInTransactionAsync(async ct =>
+        {
+            var addResult = await _departmentsRepository.AddAsync(department, ct);
+            if (addResult.IsFailure)
+                return addResult.Error;
 
-        LogDepartmentCreated(department.Id);
+            foreach (var departmentLocation in departmentLocationsResult.Value)
+            {
+                var linkResult = await _departmentsRepository.AddLocationAsync(departmentLocation, ct);
+                if (linkResult.IsFailure)
+                    return linkResult.Error;
+            }
 
-        return department.Id;
+            return Result.Success<Guid, ErrorList>(department.Id);
+        }, cancellationToken);
+
+        if (transactionResult.IsSuccess)
+            LogDepartmentCreated(department.Id);
+
+        return transactionResult;
     }
     
     private static Result<List<DepartmentLocation>, ErrorList> CreateDepartmentLocations(

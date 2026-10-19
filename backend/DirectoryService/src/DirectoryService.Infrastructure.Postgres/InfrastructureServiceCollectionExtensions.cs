@@ -1,3 +1,4 @@
+using DirectoryService.Core.Abstractions;
 using DirectoryService.Core.Departments;
 using DirectoryService.Core.Locations;
 using DirectoryService.Infrastructure.Postgres.Repositories;
@@ -32,6 +33,8 @@ public static class InfrastructureServiceCollectionExtensions
             services.AddScoped<ILocationsRepository, EfCoreLocationsRepository>();
 
         services.AddScoped<IDepartmentsRepository, EfCoreDepartmentsRepository>();
+        
+        services.AddScoped<ITransactionManager, TransactionManager>();
 
         return services;
     }

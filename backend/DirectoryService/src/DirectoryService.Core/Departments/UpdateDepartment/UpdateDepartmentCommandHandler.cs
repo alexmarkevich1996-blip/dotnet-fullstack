@@ -10,13 +10,16 @@ public partial class UpdateDepartmentCommandHandler
     : ICommandHandler<UpdateDepartmentCommand, UnitResult<ErrorList>>
 {
     private readonly IDepartmentsRepository _departmentsRepository;
+    private readonly ITransactionManager _transactionManager;
     private readonly ILogger<UpdateDepartmentCommandHandler> _logger;
 
     public UpdateDepartmentCommandHandler(
         IDepartmentsRepository departmentsRepository,
+        ITransactionManager transactionManager,
         ILogger<UpdateDepartmentCommandHandler> logger)
     {
         _departmentsRepository = departmentsRepository;
+        _transactionManager = transactionManager;
         _logger = logger;
     }
 
@@ -34,8 +37,7 @@ public partial class UpdateDepartmentCommandHandler
 
         departmentResult.Value.UpdateName(nameResult.Value);
 
-        var result = await _departmentsRepository.UpdateAsync(
-            departmentResult.Value, cancellationToken);
+        var result = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (result.IsSuccess)
             LogDepartmentUpdated(command.DepartmentId);
 

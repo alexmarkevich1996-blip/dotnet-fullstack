@@ -4,49 +4,22 @@ using DirectoryService.Domain.Common.Errors;
 using DirectoryService.Domain.Common.ValueObjects;
 using DirectoryService.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace DirectoryService.Infrastructure.Postgres.Repositories.Locations;
 
-public partial class EfCoreLocationsRepository : ILocationsRepository
+public class EfCoreLocationsRepository : ILocationsRepository
 {
     private readonly DirectoryServiceDbContext _context;
-    private readonly ILogger<EfCoreLocationsRepository> _logger;
 
-    public EfCoreLocationsRepository(DirectoryServiceDbContext context, ILogger<EfCoreLocationsRepository> logger)
+    public EfCoreLocationsRepository(DirectoryServiceDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
-    public async Task<Result<Guid, ErrorList>> AddAsync(Location location, CancellationToken cancellationToken)
+    public Task<Result<Guid, ErrorList>> AddAsync(Location location, CancellationToken cancellationToken)
     {
         _context.Locations.Add(location);
-
-        try
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-            return location.Id;
-        }
-        catch (DbUpdateException ex)
-        {
-            LogSaveFailed(ex, location.Id);
-            return Error.Internal("location.save_failed", "Failed to save location").ToErrors();
-        }
-    }
-
-    public async Task<UnitResult<ErrorList>> UpdateAsync(Location location, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-            return UnitResult.Success<ErrorList>();
-        }
-        catch (DbUpdateException ex)
-        {
-            LogSaveFailed(ex, location.Id);
-            return Error.Internal("location.save_failed", "Failed to save location").ToErrors();
-        }
+        return Task.FromResult(Result.Success<Guid, ErrorList>(location.Id));
     }
 
     public async Task<Location?> GetByNameAsync(Name name, CancellationToken cancellationToken)
@@ -58,7 +31,6 @@ public partial class EfCoreLocationsRepository : ILocationsRepository
     public Task<Guid> SaveAsync(Location location, CancellationToken cancellationToken)
     {
         throw new NotSupportedException("Not implemented yet");
-
     }
 
     public Task<Guid> DeleteAsync(Guid locationId, CancellationToken cancellationToken)
@@ -85,7 +57,4 @@ public partial class EfCoreLocationsRepository : ILocationsRepository
             .Select(l => l.Id)
             .ToListAsync(cancellationToken);
     }
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save location {LocationId}")]
-    private partial void LogSaveFailed(Exception exception, Guid locationId);
 }

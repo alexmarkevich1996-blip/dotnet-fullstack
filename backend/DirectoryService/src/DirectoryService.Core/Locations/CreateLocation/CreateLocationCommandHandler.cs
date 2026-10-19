@@ -15,15 +15,18 @@ public partial class CreateLocationCommandHandler
 {
     private readonly ILocationsRepository _locationsRepository;
     private readonly IValidator<CreateLocationCommand> _validator;
+    private readonly ITransactionManager _transactionManager;
     private readonly ILogger<CreateLocationCommandHandler> _logger;
 
     public CreateLocationCommandHandler(
         ILocationsRepository locationsRepository,
         IValidator<CreateLocationCommand> validator,
+        ITransactionManager transactionManager,
         ILogger<CreateLocationCommandHandler> logger)
     {
         _locationsRepository = locationsRepository;
         _validator = validator;
+        _transactionManager = transactionManager;
         _logger = logger;
     }
 
@@ -55,7 +58,11 @@ public partial class CreateLocationCommandHandler
 
         var location = Location.Create(nameResult.Value, addressResult.Value);
 
-        var saveResult = await _locationsRepository.AddAsync(location, cancellationToken);
+        var stageResult = await _locationsRepository.AddAsync(location, cancellationToken);
+        if (stageResult.IsFailure)
+            return stageResult.Error;
+
+        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
             return saveResult.Error;
 
