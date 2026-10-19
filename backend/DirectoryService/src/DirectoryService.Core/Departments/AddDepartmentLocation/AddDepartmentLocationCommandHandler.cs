@@ -12,15 +12,18 @@ public partial class AddDepartmentLocationCommandHandler
 {
     private readonly IDepartmentsRepository _departmentsRepository;
     private readonly ILocationsRepository _locationsRepository;
+    private readonly ITransactionManager _transactionManager;
     private readonly ILogger<AddDepartmentLocationCommandHandler> _logger;
 
     public AddDepartmentLocationCommandHandler(
         IDepartmentsRepository departmentsRepository,
         ILocationsRepository locationsRepository,
+        ITransactionManager transactionManager,
         ILogger<AddDepartmentLocationCommandHandler> logger)
     {
         _departmentsRepository = departmentsRepository;
         _locationsRepository = locationsRepository;
+        _transactionManager = transactionManager;
         _logger = logger;
     }
 
@@ -49,7 +52,11 @@ public partial class AddDepartmentLocationCommandHandler
         if (departmentLocationResult.IsFailure)
             return departmentLocationResult.Error;
 
-        var result = await _departmentsRepository.AddLocationAsync(departmentLocationResult.Value, cancellationToken);
+        var stageResult = await _departmentsRepository.AddLocationAsync(departmentLocationResult.Value, cancellationToken);
+        if (stageResult.IsFailure)
+            return stageResult.Error;
+
+        var result = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (result.IsSuccess)
             LogLocationAddedToDepartment(command.DepartmentId, command.LocationId);
 

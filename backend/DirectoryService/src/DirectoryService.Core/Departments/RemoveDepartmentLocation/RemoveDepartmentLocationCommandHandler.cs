@@ -11,15 +11,18 @@ public partial class RemoveDepartmentLocationCommandHandler
 {
     private readonly IDepartmentsRepository _departmentsRepository;
     private readonly ILocationsRepository _locationsRepository;
+    private readonly ITransactionManager _transactionManager;
     private readonly ILogger<RemoveDepartmentLocationCommandHandler> _logger;
 
     public RemoveDepartmentLocationCommandHandler(
         IDepartmentsRepository departmentsRepository,
         ILocationsRepository locationsRepository,
+        ITransactionManager transactionManager,
         ILogger<RemoveDepartmentLocationCommandHandler> logger)
     {
         _departmentsRepository = departmentsRepository;
         _locationsRepository = locationsRepository;
+        _transactionManager = transactionManager;
         _logger = logger;
     }
 
@@ -42,8 +45,12 @@ public partial class RemoveDepartmentLocationCommandHandler
                 $"Location '{command.LocationId}' is not linked to department '{command.DepartmentId}'").ToErrors();
         }
 
-        var result = await _departmentsRepository.RemoveLocationAsync(
+        var stageResult = await _departmentsRepository.RemoveLocationAsync(
             command.DepartmentId, command.LocationId, cancellationToken);
+        if (stageResult.IsFailure)
+            return stageResult.Error;
+
+        var result = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (result.IsSuccess)
             LogLocationRemovedFromDepartment(command.DepartmentId, command.LocationId);
 

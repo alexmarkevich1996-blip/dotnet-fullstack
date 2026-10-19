@@ -11,13 +11,16 @@ public partial class UpdateLocationCommandHandler
     : ICommandHandler<UpdateLocationCommand, UnitResult<ErrorList>>
 {
     private readonly ILocationsRepository _locationsRepository;
+    private readonly ITransactionManager _transactionManager;
     private readonly ILogger<UpdateLocationCommandHandler> _logger;
 
     public UpdateLocationCommandHandler(
         ILocationsRepository locationsRepository,
+        ITransactionManager transactionManager,
         ILogger<UpdateLocationCommandHandler> logger)
     {
         _locationsRepository = locationsRepository;
+        _transactionManager = transactionManager;
         _logger = logger;
     }
 
@@ -39,7 +42,7 @@ public partial class UpdateLocationCommandHandler
 
         locationResult.Value.UpdateDetails(nameResult.Value, addressResult.Value);
 
-        var result = await _locationsRepository.UpdateAsync(locationResult.Value, cancellationToken);
+        var result = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (result.IsSuccess)
             LogLocationUpdated(command.LocationId);
 
