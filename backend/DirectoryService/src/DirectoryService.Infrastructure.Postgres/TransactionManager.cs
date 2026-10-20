@@ -126,6 +126,9 @@ public partial class TransactionManager : ITransactionManager
         "ix_positions_name" => Error.Conflict(
             "position.name.duplicate",
             "Position with this name already exists").ToErrors(),
+        "ix_department_positions_department_id_position_id" => Error.Conflict(
+            "department_position.already_exists",
+            "Position is already linked to this department").ToErrors(),
         _ => Error.Conflict(
             "database.unique_violation",
             "A record with this value already exists").ToErrors(),
@@ -142,6 +145,12 @@ public partial class TransactionManager : ITransactionManager
         "fk_department_locations_locations_location_id" => Error.NotFound(
             "location.not_found",
             "Location was not found").ToErrors(),
+        "fk_department_positions_departments_department_id" => Error.NotFound(
+            "department.not_found",
+            "Department was not found").ToErrors(),
+        "fk_department_positions_positions_position_id" => Error.NotFound(
+            "position.not_found",
+            "Position was not found").ToErrors(),
         _ => Error.Validation(
             "database.foreign_key_violation",
             "Referenced entity does not exist").ToErrors(),

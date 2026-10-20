@@ -15,4 +15,7 @@ public interface IDepartmentsRepository
     Task<bool> LocationLinkExistsAsync(Guid departmentId, Guid locationId, CancellationToken cancellationToken);
     Task<UnitResult<ErrorList>> AddLocationAsync(DepartmentLocation departmentLocation, CancellationToken cancellationToken);
     Task<UnitResult<ErrorList>> RemoveLocationAsync(Guid departmentId, Guid locationId, CancellationToken cancellationToken);
+    Task<bool> PositionLinkExistsAsync(Guid departmentId, Guid positionId, CancellationToken cancellationToken);
+    Task<UnitResult<ErrorList>> AddPositionAsync(DepartmentPosition departmentPosition, CancellationToken cancellationToken);
+    Task<UnitResult<ErrorList>> RemovePositionAsync(Guid departmentId, Guid positionId, CancellationToken cancellationToken);
 }

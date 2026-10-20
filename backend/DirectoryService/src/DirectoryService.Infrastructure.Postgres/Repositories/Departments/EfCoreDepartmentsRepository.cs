@@ -75,4 +75,30 @@ public class EfCoreDepartmentsRepository : IDepartmentsRepository
 
         return Task.FromResult(existingDepartmentLocation is not null);
     }
+
+    public Task<UnitResult<ErrorList>> AddPositionAsync(DepartmentPosition departmentPosition, CancellationToken cancellationToken)
+    {
+        _context.DepartmentPositions.Add(departmentPosition);
+        return Task.FromResult(UnitResult.Success<ErrorList>());
+    }
+
+    public async Task<UnitResult<ErrorList>> RemovePositionAsync(Guid departmentId, Guid positionId, CancellationToken cancellationToken)
+    {
+        var departmentPosition = await _context.DepartmentPositions
+            .FirstOrDefaultAsync(dp => dp.DepartmentId == departmentId && dp.PositionId == positionId, cancellationToken);
+
+        if (departmentPosition is null)
+            return UnitResult.Success<ErrorList>();
+
+        _context.DepartmentPositions.Remove(departmentPosition);
+        return UnitResult.Success<ErrorList>();
+    }
+
+    public Task<bool> PositionLinkExistsAsync(Guid departmentId, Guid positionId, CancellationToken cancellationToken)
+    {
+        var existingDepartmentPosition = _context.DepartmentPositions
+            .FirstOrDefault(dp => dp.DepartmentId == departmentId && dp.PositionId == positionId);
+
+        return Task.FromResult(existingDepartmentPosition is not null);
+    }
 }
