@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Locations;
 using DirectoryService.Core.Abstractions;
 using DirectoryService.Core.Locations.CreateLocation;
+using DirectoryService.Core.Locations.DeleteLocation;
 using DirectoryService.Core.Locations.GetLocations;
 using DirectoryService.Core.Locations.UpdateLocation;
 using DirectoryService.Domain.Common.Errors;
@@ -24,15 +25,18 @@ public class LocationsController : ControllerBase
 {
     private readonly ICommandHandler<CreateLocationCommand, Result<Guid, ErrorList>> _createHandler;
     private readonly ICommandHandler<UpdateLocationCommand, UnitResult<ErrorList>> _updateHandler;
+    private readonly ICommandHandler<DeleteLocationCommand, UnitResult<ErrorList>> _deleteHandler;
     private readonly IQueryHandler<GetLocationsQuery, Result<IReadOnlyCollection<object>, ErrorList>> _getAllHandler;
 
     public LocationsController(
         ICommandHandler<CreateLocationCommand, Result<Guid, ErrorList>> createHandler,
         ICommandHandler<UpdateLocationCommand, UnitResult<ErrorList>> updateHandler,
+        ICommandHandler<DeleteLocationCommand, UnitResult<ErrorList>> deleteHandler,
         IQueryHandler<GetLocationsQuery, Result<IReadOnlyCollection<object>, ErrorList>> getAllHandler)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
+        _deleteHandler = deleteHandler;
         _getAllHandler = getAllHandler;
     }
 
@@ -78,8 +82,13 @@ public class LocationsController : ControllerBase
     }
 
     [HttpDelete("{locationId:guid}")]
-    public IActionResult Delete([FromRoute] Guid locationId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IResult> Delete([FromRoute] Guid locationId, CancellationToken cancellationToken)
     {
-        return NoContent();
+        var command = new DeleteLocationCommand(locationId);
+        var result = await _deleteHandler.Handle(command, cancellationToken);
+        return result.ToApiResult();
     }
 }

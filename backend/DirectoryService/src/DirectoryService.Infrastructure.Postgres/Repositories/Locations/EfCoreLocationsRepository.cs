@@ -28,16 +28,6 @@ public class EfCoreLocationsRepository : ILocationsRepository
             .FirstOrDefaultAsync(l => l.Name == name, cancellationToken);
     }
 
-    public Task<Guid> SaveAsync(Location location, CancellationToken cancellationToken)
-    {
-        throw new NotSupportedException("Not implemented yet");
-    }
-
-    public Task<Guid> DeleteAsync(Guid locationId, CancellationToken cancellationToken)
-    {
-        throw new NotSupportedException("Not implemented yet");
-    }
-
     public async Task<Result<Location, ErrorList>> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
     {
         var location = await _context.Locations
@@ -56,5 +46,10 @@ public class EfCoreLocationsRepository : ILocationsRepository
             .Where(l => ids.Contains(l.Id))
             .Select(l => l.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    public void Remove(Location location)
+    {
+        _context.Locations.Remove(location);
     }
 }
