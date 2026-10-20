@@ -85,16 +85,6 @@ public partial class DapperLocationsRepository : ILocationsRepository
     }
 
 
-    public Task<Guid> SaveAsync(Location location, CancellationToken cancellationToken)
-    {
-        throw new NotSupportedException("Not implemented yet");
-    }
-
-    public Task<Guid> DeleteAsync(Guid locationId, CancellationToken cancellationToken)
-    {
-        throw new NotSupportedException("Not implemented yet");
-    }
-
     public async Task<Result<Location, ErrorList>> GetByIdAsync(Guid locationId, CancellationToken cancellationToken)
     {
         const string sql = """
@@ -141,6 +131,24 @@ public partial class DapperLocationsRepository : ILocationsRepository
                 cancellationToken: cancellationToken));
 
         return existingIds.ToList();
+    }
+
+    public async Task<bool> HasDepartmentLinksAsync(Guid locationId, CancellationToken cancellationToken)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM department_locations WHERE location_id = @LocationId)";
+
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        return await connection.ExecuteScalarAsync<bool>(
+            new CommandDefinition(
+                sql,
+                new { LocationId = locationId },
+                cancellationToken: cancellationToken));
+    }
+
+    public void Remove(Location location)
+    {
+        throw new NotSupportedException("Not implemented yet");
     }
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to save location {LocationId}")]

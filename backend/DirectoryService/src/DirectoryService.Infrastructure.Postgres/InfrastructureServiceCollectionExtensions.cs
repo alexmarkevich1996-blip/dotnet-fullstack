@@ -1,9 +1,11 @@
 using DirectoryService.Core.Abstractions;
 using DirectoryService.Core.Departments;
 using DirectoryService.Core.Locations;
+using DirectoryService.Core.Positions;
 using DirectoryService.Infrastructure.Postgres.Repositories;
 using DirectoryService.Infrastructure.Postgres.Repositories.Departments;
 using DirectoryService.Infrastructure.Postgres.Repositories.Locations;
+using DirectoryService.Infrastructure.Postgres.Repositories.Positions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +35,8 @@ public static class InfrastructureServiceCollectionExtensions
             services.AddScoped<ILocationsRepository, EfCoreLocationsRepository>();
 
         services.AddScoped<IDepartmentsRepository, EfCoreDepartmentsRepository>();
-        
+        services.AddScoped<IPositionsRepository, EfCorePositionsRepository>();
+
         services.AddScoped<ITransactionManager, TransactionManager>();
 
         return services;

@@ -16,12 +16,12 @@ public class DepartmentLocationConfiguration : IEntityTypeConfiguration<Departme
         builder.HasOne<Department>()
             .WithMany()
             .HasForeignKey(dl => dl.DepartmentId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne<Location>()
             .WithMany()
             .HasForeignKey(dl => dl.LocationId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(dl => dl.IsPrimary);
         

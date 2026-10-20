@@ -20,7 +20,14 @@ public class Position
     public static Position Create(Name name)
     {
         ArgumentNullException.ThrowIfNull(name);
-        
+
         return new Position(name);
+    }
+
+    public void UpdateName(Name name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        Name = name;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

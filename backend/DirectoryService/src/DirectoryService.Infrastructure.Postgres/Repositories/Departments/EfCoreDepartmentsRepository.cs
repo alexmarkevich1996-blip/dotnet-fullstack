@@ -39,6 +39,29 @@ public class EfCoreDepartmentsRepository : IDepartmentsRepository
             .FirstOrDefaultAsync(d => d.Name == name, cancellationToken);
     }
 
+    public async Task<bool> HasChildrenAsync(Guid departmentId, CancellationToken cancellationToken)
+    {
+        return await _context.Departments
+            .AnyAsync(d => d.ParentId == departmentId, cancellationToken);
+    }
+
+    public async Task<bool> HasLocationLinksAsync(Guid departmentId, CancellationToken cancellationToken)
+    {
+        return await _context.DepartmentLocations
+            .AnyAsync(dl => dl.DepartmentId == departmentId, cancellationToken);
+    }
+
+    public async Task<bool> HasPositionLinksAsync(Guid departmentId, CancellationToken cancellationToken)
+    {
+        return await _context.DepartmentPositions
+            .AnyAsync(dp => dp.DepartmentId == departmentId, cancellationToken);
+    }
+
+    public void Remove(Department department)
+    {
+        _context.Departments.Remove(department);
+    }
+
     public Task<UnitResult<ErrorList>> AddLocationAsync(DepartmentLocation departmentLocation, CancellationToken cancellationToken)
     {
         _context.DepartmentLocations.Add(departmentLocation);
@@ -63,5 +86,31 @@ public class EfCoreDepartmentsRepository : IDepartmentsRepository
             .FirstOrDefault(dl => dl.DepartmentId == departmentId && dl.LocationId == locationId);
 
         return Task.FromResult(existingDepartmentLocation is not null);
+    }
+
+    public Task<UnitResult<ErrorList>> AddPositionAsync(DepartmentPosition departmentPosition, CancellationToken cancellationToken)
+    {
+        _context.DepartmentPositions.Add(departmentPosition);
+        return Task.FromResult(UnitResult.Success<ErrorList>());
+    }
+
+    public async Task<UnitResult<ErrorList>> RemovePositionAsync(Guid departmentId, Guid positionId, CancellationToken cancellationToken)
+    {
+        var departmentPosition = await _context.DepartmentPositions
+            .FirstOrDefaultAsync(dp => dp.DepartmentId == departmentId && dp.PositionId == positionId, cancellationToken);
+
+        if (departmentPosition is null)
+            return UnitResult.Success<ErrorList>();
+
+        _context.DepartmentPositions.Remove(departmentPosition);
+        return UnitResult.Success<ErrorList>();
+    }
+
+    public Task<bool> PositionLinkExistsAsync(Guid departmentId, Guid positionId, CancellationToken cancellationToken)
+    {
+        var existingDepartmentPosition = _context.DepartmentPositions
+            .FirstOrDefault(dp => dp.DepartmentId == departmentId && dp.PositionId == positionId);
+
+        return Task.FromResult(existingDepartmentPosition is not null);
     }
 }

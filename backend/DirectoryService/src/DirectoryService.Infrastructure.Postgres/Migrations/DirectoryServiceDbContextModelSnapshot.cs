@@ -219,14 +219,14 @@ namespace DirectoryService.Infrastructure.Postgres.Migrations
                     b.HasOne("DirectoryService.Domain.Departments.Department", null)
                         .WithMany()
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_department_locations_departments_department_id");
 
                     b.HasOne("DirectoryService.Domain.Locations.Location", null)
                         .WithMany()
                         .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_department_locations_locations_location_id");
                 });
@@ -236,14 +236,14 @@ namespace DirectoryService.Infrastructure.Postgres.Migrations
                     b.HasOne("DirectoryService.Domain.Departments.Department", null)
                         .WithMany()
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_department_positions_departments_department_id");
 
                     b.HasOne("DirectoryService.Domain.Positions.Position", null)
                         .WithMany()
                         .HasForeignKey("PositionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_department_positions_positions_position_id");
                 });
