@@ -10,6 +10,8 @@ public interface IDepartmentsRepository
     Task<Result<Guid, ErrorList>> AddAsync(Department department, CancellationToken cancellationToken);
     Task<Result<Department, ErrorList>> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Department?> GetByNameAsync(Name name, CancellationToken cancellationToken);
+    Task<bool> HasChildrenAsync(Guid departmentId, CancellationToken cancellationToken);
+    void Remove(Department department);
     Task<bool> LocationLinkExistsAsync(Guid departmentId, Guid locationId, CancellationToken cancellationToken);
     Task<UnitResult<ErrorList>> AddLocationAsync(DepartmentLocation departmentLocation, CancellationToken cancellationToken);
     Task<UnitResult<ErrorList>> RemoveLocationAsync(Guid departmentId, Guid locationId, CancellationToken cancellationToken);

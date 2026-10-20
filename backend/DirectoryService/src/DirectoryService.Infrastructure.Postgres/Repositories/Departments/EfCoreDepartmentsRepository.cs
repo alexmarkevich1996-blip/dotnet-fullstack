@@ -39,6 +39,17 @@ public class EfCoreDepartmentsRepository : IDepartmentsRepository
             .FirstOrDefaultAsync(d => d.Name == name, cancellationToken);
     }
 
+    public async Task<bool> HasChildrenAsync(Guid departmentId, CancellationToken cancellationToken)
+    {
+        return await _context.Departments
+            .AnyAsync(d => d.ParentId == departmentId, cancellationToken);
+    }
+
+    public void Remove(Department department)
+    {
+        _context.Departments.Remove(department);
+    }
+
     public Task<UnitResult<ErrorList>> AddLocationAsync(DepartmentLocation departmentLocation, CancellationToken cancellationToken)
     {
         _context.DepartmentLocations.Add(departmentLocation);

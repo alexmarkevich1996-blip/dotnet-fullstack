@@ -3,6 +3,7 @@ using DirectoryService.Contracts.Departments;
 using DirectoryService.Core.Abstractions;
 using DirectoryService.Core.Departments.AddDepartmentLocation;
 using DirectoryService.Core.Departments.CreateDepartment;
+using DirectoryService.Core.Departments.DeleteDepartment;
 using DirectoryService.Core.Departments.GetDepartmentById;
 using DirectoryService.Core.Departments.RemoveDepartmentLocation;
 using DirectoryService.Core.Departments.UpdateDepartment;
@@ -28,6 +29,7 @@ public class DepartmentsController : ControllerBase
     private readonly ICommandHandler<UpdateDepartmentCommand, UnitResult<ErrorList>> _updateHandler;
     private readonly ICommandHandler<AddDepartmentLocationCommand, UnitResult<ErrorList>> _addLocationHandler;
     private readonly ICommandHandler<RemoveDepartmentLocationCommand, UnitResult<ErrorList>> _removeLocationHandler;
+    private readonly ICommandHandler<DeleteDepartmentCommand, UnitResult<ErrorList>> _deleteHandler;
     private readonly IQueryHandler<GetDepartmentByIdQuery, Result<DepartmentResponseDto, ErrorList>> _getByIdHandler;
 
     public DepartmentsController(
@@ -35,12 +37,14 @@ public class DepartmentsController : ControllerBase
         ICommandHandler<UpdateDepartmentCommand, UnitResult<ErrorList>> updateHandler,
         ICommandHandler<AddDepartmentLocationCommand, UnitResult<ErrorList>> addLocationHandler,
         ICommandHandler<RemoveDepartmentLocationCommand, UnitResult<ErrorList>> removeLocationHandler,
+        ICommandHandler<DeleteDepartmentCommand, UnitResult<ErrorList>> deleteHandler,
         IQueryHandler<GetDepartmentByIdQuery, Result<DepartmentResponseDto, ErrorList>> getByIdHandler)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _addLocationHandler = addLocationHandler;
         _removeLocationHandler = removeLocationHandler;
+        _deleteHandler = deleteHandler;
         _getByIdHandler = getByIdHandler;
     }
 
@@ -113,8 +117,14 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpDelete("{departmentId:guid}")]
-    public IActionResult Delete([FromRoute] Guid departmentId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IResult> Delete([FromRoute] Guid departmentId, CancellationToken cancellationToken)
     {
-        return NoContent();
+        var command = new DeleteDepartmentCommand(departmentId);
+        var result = await _deleteHandler.Handle(command, cancellationToken);
+        return result.ToApiResult();
     }
 }
