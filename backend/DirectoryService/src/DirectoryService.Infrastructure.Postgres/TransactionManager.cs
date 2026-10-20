@@ -123,6 +123,9 @@ public partial class TransactionManager : ITransactionManager
         "ix_department_locations_department_id_location_id" => Error.Conflict(
             "department_location.already_exists",
             "Location is already linked to this department").ToErrors(),
+        "ix_positions_name" => Error.Conflict(
+            "position.name.duplicate",
+            "Position with this name already exists").ToErrors(),
         _ => Error.Conflict(
             "database.unique_violation",
             "A record with this value already exists").ToErrors(),
