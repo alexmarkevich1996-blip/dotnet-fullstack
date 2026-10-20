@@ -37,6 +37,22 @@ public partial class DeleteDepartmentCommandHandler
                 $"Department '{command.DepartmentId}' has child departments and cannot be deleted").ToErrors();
         }
 
+        var hasLocationLinks = await _departmentsRepository.HasLocationLinksAsync(command.DepartmentId, cancellationToken);
+        if (hasLocationLinks)
+        {
+            LogDepartmentHasLinksConflict(command.DepartmentId, "locations");
+            return Error.Conflict("department.has_linked_locations",
+                $"Department '{command.DepartmentId}' has linked locations and cannot be deleted").ToErrors();
+        }
+
+        var hasPositionLinks = await _departmentsRepository.HasPositionLinksAsync(command.DepartmentId, cancellationToken);
+        if (hasPositionLinks)
+        {
+            LogDepartmentHasLinksConflict(command.DepartmentId, "positions");
+            return Error.Conflict("department.has_linked_positions",
+                $"Department '{command.DepartmentId}' has linked positions and cannot be deleted").ToErrors();
+        }
+
         _departmentsRepository.Remove(departmentResult.Value);
 
         var result = await _transactionManager.SaveChangesAsync(cancellationToken);
@@ -51,4 +67,7 @@ public partial class DeleteDepartmentCommandHandler
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to delete department {DepartmentId} with existing child departments")]
     private partial void LogDepartmentHasChildrenConflict(Guid departmentId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to delete department {DepartmentId} with existing {LinkType} links")]
+    private partial void LogDepartmentHasLinksConflict(Guid departmentId, string linkType);
 }

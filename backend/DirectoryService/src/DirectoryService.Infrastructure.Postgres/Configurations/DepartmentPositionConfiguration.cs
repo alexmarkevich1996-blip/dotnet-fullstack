@@ -16,12 +16,12 @@ public class DepartmentPositionConfiguration : IEntityTypeConfiguration<Departme
         builder.HasOne<Department>()
             .WithMany()
             .HasForeignKey(dp => dp.DepartmentId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne<Position>()
             .WithMany()
             .HasForeignKey(dp => dp.PositionId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
         
         builder.HasIndex(dp => new {dp.DepartmentId, dp.PositionId})
             .IsUnique();

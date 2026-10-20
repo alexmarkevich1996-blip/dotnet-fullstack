@@ -48,6 +48,12 @@ public class EfCoreLocationsRepository : ILocationsRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<bool> HasDepartmentLinksAsync(Guid locationId, CancellationToken cancellationToken)
+    {
+        return await _context.DepartmentLocations
+            .AnyAsync(dl => dl.LocationId == locationId, cancellationToken);
+    }
+
     public void Remove(Location location)
     {
         _context.Locations.Remove(location);

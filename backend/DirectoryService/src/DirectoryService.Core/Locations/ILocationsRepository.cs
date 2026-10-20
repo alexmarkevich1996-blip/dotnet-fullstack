@@ -15,5 +15,7 @@ public interface ILocationsRepository
 
     Task<IReadOnlyCollection<Guid>> GetExistingIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken);
 
+    Task<bool> HasDepartmentLinksAsync(Guid locationId, CancellationToken cancellationToken);
+
     void Remove(Location location);
 }

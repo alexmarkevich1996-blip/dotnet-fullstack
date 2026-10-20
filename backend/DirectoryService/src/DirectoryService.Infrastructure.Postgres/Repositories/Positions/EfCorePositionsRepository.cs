@@ -39,6 +39,12 @@ public class EfCorePositionsRepository : IPositionsRepository
             .FirstOrDefaultAsync(p => p.Name == name, cancellationToken);
     }
 
+    public async Task<bool> HasDepartmentLinksAsync(Guid positionId, CancellationToken cancellationToken)
+    {
+        return await _context.DepartmentPositions
+            .AnyAsync(dp => dp.PositionId == positionId, cancellationToken);
+    }
+
     public void Remove(Position position)
     {
         _context.Positions.Remove(position);

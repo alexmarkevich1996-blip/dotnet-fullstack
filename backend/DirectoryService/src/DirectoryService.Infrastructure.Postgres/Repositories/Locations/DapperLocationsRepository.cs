@@ -133,6 +133,19 @@ public partial class DapperLocationsRepository : ILocationsRepository
         return existingIds.ToList();
     }
 
+    public async Task<bool> HasDepartmentLinksAsync(Guid locationId, CancellationToken cancellationToken)
+    {
+        const string sql = "SELECT EXISTS(SELECT 1 FROM department_locations WHERE location_id = @LocationId)";
+
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+        return await connection.ExecuteScalarAsync<bool>(
+            new CommandDefinition(
+                sql,
+                new { LocationId = locationId },
+                cancellationToken: cancellationToken));
+    }
+
     public void Remove(Location location)
     {
         throw new NotSupportedException("Not implemented yet");

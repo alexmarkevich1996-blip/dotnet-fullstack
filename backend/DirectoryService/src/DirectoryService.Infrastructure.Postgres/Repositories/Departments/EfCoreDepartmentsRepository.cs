@@ -45,6 +45,18 @@ public class EfCoreDepartmentsRepository : IDepartmentsRepository
             .AnyAsync(d => d.ParentId == departmentId, cancellationToken);
     }
 
+    public async Task<bool> HasLocationLinksAsync(Guid departmentId, CancellationToken cancellationToken)
+    {
+        return await _context.DepartmentLocations
+            .AnyAsync(dl => dl.DepartmentId == departmentId, cancellationToken);
+    }
+
+    public async Task<bool> HasPositionLinksAsync(Guid departmentId, CancellationToken cancellationToken)
+    {
+        return await _context.DepartmentPositions
+            .AnyAsync(dp => dp.DepartmentId == departmentId, cancellationToken);
+    }
+
     public void Remove(Department department)
     {
         _context.Departments.Remove(department);

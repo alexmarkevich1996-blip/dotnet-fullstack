@@ -34,6 +34,14 @@ public partial class UpdatePositionCommandHandler
         if (nameResult.IsFailure)
             return nameResult.Error;
 
+        var existingPosition = await _positionsRepository.GetByNameAsync(nameResult.Value, cancellationToken);
+        if (existingPosition != null && existingPosition.Id != command.PositionId)
+        {
+            LogPositionNameConflict(command.Name);
+            return Error.Conflict("position.name.duplicate",
+                $"Position with name '{command.Name}' already exists").ToErrors();
+        }
+
         positionResult.Value.UpdateName(nameResult.Value);
 
         var result = await _transactionManager.SaveChangesAsync(cancellationToken);
@@ -45,4 +53,7 @@ public partial class UpdatePositionCommandHandler
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Position {PositionId} updated")]
     private partial void LogPositionUpdated(Guid positionId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Attempted to rename position to duplicate name {PositionName}")]
+    private partial void LogPositionNameConflict(string positionName);
 }
