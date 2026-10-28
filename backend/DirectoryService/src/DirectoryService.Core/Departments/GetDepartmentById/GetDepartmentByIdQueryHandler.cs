@@ -2,35 +2,39 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Departments;
 using DirectoryService.Core.Abstractions;
 using DirectoryService.Domain.Common.Errors;
+using Microsoft.EntityFrameworkCore;
 
 namespace DirectoryService.Core.Departments.GetDepartmentById;
 
 public class GetDepartmentByIdQueryHandler
     : IQueryHandler<GetDepartmentByIdQuery, Result<DepartmentResponseDto, ErrorList>>
 {
-    private readonly IDepartmentsRepository _departmentsRepository;
+    private readonly IReadDbContext _readDbContext;
 
-    public GetDepartmentByIdQueryHandler(IDepartmentsRepository departmentsRepository)
+    public GetDepartmentByIdQueryHandler(IReadDbContext readDbContext)
     {
-        _departmentsRepository = departmentsRepository;
+        _readDbContext = readDbContext;
     }
 
     public async Task<Result<DepartmentResponseDto, ErrorList>> Handle(
         GetDepartmentByIdQuery query, CancellationToken cancellationToken)
     {
-        var departmentResult = await _departmentsRepository.GetByIdAsync(query.DepartmentId, cancellationToken);
-        if (departmentResult.IsFailure)
-            return departmentResult.Error;
+        var dto = await _readDbContext.Departments
+            .Where(d => d.Id == query.DepartmentId)
+            .Select(d => new DepartmentResponseDto(
+                d.Id,
+                d.Name.Value,
+                d.Slug.Value,
+                d.Path.Value,
+                d.ParentId,
+                d.CreatedAt,
+                d.UpdatedAt))
+            .FirstOrDefaultAsync(cancellationToken);
 
-        var department = departmentResult.Value;
+        if (dto is null)
+            return Error.NotFound("department.not_found", $"Department with id '{query.DepartmentId}' was not found")
+                .ToErrors();
 
-        return new DepartmentResponseDto(
-            department.Id,
-            department.Name.Value,
-            department.Slug.Value,
-            department.Path.Value,
-            department.ParentId,
-            department.CreatedAt,
-            department.UpdatedAt);
+        return dto;
     }
 }
