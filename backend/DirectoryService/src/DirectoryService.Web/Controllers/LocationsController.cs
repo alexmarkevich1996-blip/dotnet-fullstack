@@ -3,6 +3,7 @@ using DirectoryService.Contracts.Locations;
 using DirectoryService.Core.Abstractions;
 using DirectoryService.Core.Locations.CreateLocation;
 using DirectoryService.Core.Locations.DeleteLocation;
+using DirectoryService.Core.Locations.GetLocationById;
 using DirectoryService.Core.Locations.GetLocations;
 using DirectoryService.Core.Locations.UpdateLocation;
 using DirectoryService.Domain.Common.Errors;
@@ -27,17 +28,20 @@ public class LocationsController : ControllerBase
     private readonly ICommandHandler<UpdateLocationCommand, UnitResult<ErrorList>> _updateHandler;
     private readonly ICommandHandler<DeleteLocationCommand, UnitResult<ErrorList>> _deleteHandler;
     private readonly IQueryHandler<GetLocationsQuery, Result<IReadOnlyCollection<object>, ErrorList>> _getAllHandler;
+    private readonly IQueryHandler<GetLocationByIdQuery, Result<LocationResponseDto, ErrorList>> _getByIdHandler;
 
     public LocationsController(
         ICommandHandler<CreateLocationCommand, Result<Guid, ErrorList>> createHandler,
         ICommandHandler<UpdateLocationCommand, UnitResult<ErrorList>> updateHandler,
         ICommandHandler<DeleteLocationCommand, UnitResult<ErrorList>> deleteHandler,
-        IQueryHandler<GetLocationsQuery, Result<IReadOnlyCollection<object>, ErrorList>> getAllHandler)
+        IQueryHandler<GetLocationsQuery, Result<IReadOnlyCollection<object>, ErrorList>> getAllHandler,
+        IQueryHandler<GetLocationByIdQuery, Result<LocationResponseDto, ErrorList>> getByIdHandler)
     {
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _deleteHandler = deleteHandler;
         _getAllHandler = getAllHandler;
+        _getByIdHandler = getByIdHandler;
     }
 
     [HttpPost]
@@ -76,9 +80,13 @@ public class LocationsController : ControllerBase
     }
 
     [HttpGet("{locationId:guid}")]
-    public IActionResult GetById([FromRoute] Guid locationId, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(Envelope<LocationResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Envelope<object>), StatusCodes.Status404NotFound)]
+    public async Task<IResult> GetById([FromRoute] Guid locationId, CancellationToken cancellationToken)
     {
-        return NotFound();
+        var query = new GetLocationByIdQuery(locationId);
+        var result = await _getByIdHandler.Handle(query, cancellationToken);
+        return result.ToApiResult();
     }
 
     [HttpDelete("{locationId:guid}")]
