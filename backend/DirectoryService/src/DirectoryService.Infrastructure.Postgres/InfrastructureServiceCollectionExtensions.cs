@@ -38,6 +38,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IPositionsRepository, EfCorePositionsRepository>();
 
         services.AddScoped<ITransactionManager, TransactionManager>();
+        services.AddScoped<IReadDbContext, ReadDbContext>();
 
         return services;
     }
